@@ -1,0 +1,248 @@
+{% extends 'base.html' %}
+
+{% block title %}Model Performance - EarthScape Climate Agency{% endblock %}
+
+{% block page_content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1><i class="fas fa-chart-line"></i> ML Model Performance</h1>
+                <p class="text-muted">Monitor and analyze machine learning model performance metrics</p>
+            </div>
+            <div>
+                <a href="{% url 'ai_models:ai_dashboard' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if model_metrics %}
+<!-- Model Performance Cards -->
+<div class="row mb-4">
+    {% for item in model_metrics %}
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-brain"></i> {{ item.model.name }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <!-- Model Info -->
+                <div class="mb-3">
+                    <div class="row">
+                        <div class="col-6">
+                            <strong>Type:</strong><br>
+                            <span class="badge bg-info">{{ item.model.get_model_type_display }}</span>
+                        </div>
+                        <div class="col-6">
+                            <strong>Status:</strong><br>
+                            {% if item.model.status == 'READY' %}
+                                <span class="badge bg-success">{{ item.model.get_status_display }}</span>
+                            {% elif item.model.status == 'TRAINING' %}
+                                <span class="badge bg-warning">{{ item.model.get_status_display }}</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ item.model.get_status_display }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <hr>
+
+                <!-- Performance Score -->
+                {% if item.performance_score %}
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <strong>Overall Performance Score:</strong>
+                        <span class="badge {% if item.performance_score >= 0.8 %}bg-success{% elif item.performance_score >= 0.6 %}bg-warning{% else %}bg-danger{% endif %} badge-lg">
+                            {{ item.performance_score|floatformat:2 }}
+                        </span>
+                    </div>
+                    <div class="progress mt-2" style="height: 25px;">
+                        <div class="progress-bar {% if item.performance_score >= 0.8 %}bg-success{% elif item.performance_score >= 0.6 %}bg-warning{% else %}bg-danger{% endif %}" 
+                             role="progressbar" 
+                             style="width: {{ item.performance_score|floatformat:0 }}%" 
+                             aria-valuenow="{{ item.performance_score|floatformat:0 }}" 
+                             aria-valuemin="0" 
+                             aria-valuemax="100">
+                            {{ item.performance_score|floatformat:0 }}%
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Metrics Details -->
+                <div class="mb-3">
+                    <h6><i class="fas fa-chart-bar"></i> Performance Metrics</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered">
+                            <tbody>
+                                {% if item.metrics.accuracy is not None %}
+                                <tr>
+                                    <td><strong>Accuracy:</strong></td>
+                                    <td class="text-end">
+                                        <span class="badge {% if item.metrics.accuracy >= 0.8 %}bg-success{% elif item.metrics.accuracy >= 0.6 %}bg-warning{% else %}bg-danger{% endif %}">
+                                            {{ item.metrics.accuracy|floatformat:3 }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                                {% if item.metrics.f1_score is not None %}
+                                <tr>
+                                    <td><strong>F1 Score:</strong></td>
+                                    <td class="text-end">
+                                        <span class="badge {% if item.metrics.f1_score >= 0.8 %}bg-success{% elif item.metrics.f1_score >= 0.6 %}bg-warning{% else %}bg-danger{% endif %}">
+                                            {{ item.metrics.f1_score|floatformat:3 }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                                {% if item.metrics.precision is not None %}
+                                <tr>
+                                    <td><strong>Precision:</strong></td>
+                                    <td class="text-end">
+                                        <span class="badge {% if item.metrics.precision >= 0.8 %}bg-success{% elif item.metrics.precision >= 0.6 %}bg-warning{% else %}bg-danger{% endif %}">
+                                            {{ item.metrics.precision|floatformat:3 }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                                {% if item.metrics.recall is not None %}
+                                <tr>
+                                    <td><strong>Recall:</strong></td>
+                                    <td class="text-end">
+                                        <span class="badge {% if item.metrics.recall >= 0.8 %}bg-success{% elif item.metrics.recall >= 0.6 %}bg-warning{% else %}bg-danger{% endif %}">
+                                            {{ item.metrics.recall|floatformat:3 }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                                {% if item.metrics.mse is not None %}
+                                <tr>
+                                    <td><strong>Mean Squared Error:</strong></td>
+                                    <td class="text-end">
+                                        <span class="badge bg-info">{{ item.metrics.mse|floatformat:4 }}</span>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                                {% if item.metrics.rmse is not None %}
+                                <tr>
+                                    <td><strong>RMSE:</strong></td>
+                                    <td class="text-end">
+                                        <span class="badge bg-info">{{ item.metrics.rmse|floatformat:4 }}</span>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                                {% if item.metrics.mae is not None %}
+                                <tr>
+                                    <td><strong>Mean Absolute Error:</strong></td>
+                                    <td class="text-end">
+                                        <span class="badge bg-info">{{ item.metrics.mae|floatformat:4 }}</span>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Additional Info -->
+                <div class="text-muted small">
+                    <i class="fas fa-clock"></i> Last Updated: {{ item.metrics.created_at|date:"M d, Y H:i" }}
+                    {% if item.metrics.total_predictions is not None %}
+                        <br><i class="fas fa-chart-bar"></i> Total Predictions: {{ item.metrics.total_predictions }}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Summary Statistics -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-info-circle"></i> Performance Summary</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <div class="p-3 bg-light rounded">
+                            <h3 class="text-primary">{{ model_metrics|length }}</h3>
+                            <p class="mb-0">Active Models</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="p-3 bg-light rounded">
+                            <h3 class="text-success">{{ model_metrics|length }}</h3>
+                            <p class="mb-0">Ready Models</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="p-3 bg-light rounded">
+                            <h3 class="text-info">100%</h3>
+                            <p class="mb-0">Model Coverage</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="p-3 bg-light rounded">
+                            <h3 class="text-warning">
+                                {% if model_metrics %}
+                                    {% for item in model_metrics %}
+                                        {% if item.performance_score %}
+                                            {{ item.performance_score|floatformat:2 }}
+                                            {% if not forloop.last %}, {% endif %}
+                                        {% endif %}
+                                    {% empty %}
+                                        N/A
+                                    {% endfor %}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </h3>
+                            <p class="mb-0">Latest Scores</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% else %}
+<!-- No Metrics Available -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-chart-line fa-4x text-muted mb-3"></i>
+                <h4 class="text-muted">No Performance Metrics Available</h4>
+                <p class="text-muted">
+                    Model performance metrics will appear here after models are trained and evaluated.
+                </p>
+                <a href="{% url 'ai_models:ai_dashboard' %}" class="btn btn-primary">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_scripts %}
+<style>
+.badge-lg {
+    font-size: 1.1rem;
+    padding: 0.5rem 1rem;
+}
+</style>
+{% endblock %}
+

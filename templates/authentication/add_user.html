@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% block title %}Add New User - EarthScape Climate Agency{% endblock %}
+
+{% block page_content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h4><i class="fas fa-user-plus"></i> Add New User</h4>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Username *</label>
+                            <input type="text" class="form-control" name="username" required>
+                            <small class="text-muted">Unique username for login</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Role *</label>
+                            <select class="form-select" name="role" required>
+                                <option value="">Select Role</option>
+                                {% for role_value, role_name in roles %}
+                                <option value="{{ role_value }}">{{ role_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">First Name</label>
+                            <input type="text" class="form-control" name="first_name">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Last Name</label>
+                            <input type="text" class="form-control" name="last_name">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Email *</label>
+                        <input type="email" class="form-control" name="email" required>
+                        <small class="text-muted">Used for notifications and password recovery</small>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Department</label>
+                            <input type="text" class="form-control" name="department" placeholder="e.g., Data Analysis, IT, Research">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Phone</label>
+                            <input type="text" class="form-control" name="phone" placeholder="+1-555-0123">
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+                    <h5 class="mb-3">Password Setup</h5>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Password *</label>
+                            <input type="password" class="form-control" name="password1" required minlength="8">
+                            <small class="text-muted">Minimum 8 characters</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Confirm Password *</label>
+                            <input type="password" class="form-control" name="password2" required minlength="8">
+                            <small class="text-muted">Must match password above</small>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Note:</strong> The user will need to change their password after first login for security.
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'authentication:user_list' %}" class="btn btn-secondary me-md-2">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-user-plus"></i> Create User
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_scripts %}
+<script>
+// Password confirmation validation
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const password1 = document.querySelector('input[name="password1"]');
+    const password2 = document.querySelector('input[name="password2"]');
+
+    form.addEventListener('submit', function(e) {
+        if (password1.value !== password2.value) {
+            e.preventDefault();
+            alert('Passwords do not match!');
+            password2.focus();
+        }
+    });
+});
+</script>
+{% endblock %}
+{% endblock %}

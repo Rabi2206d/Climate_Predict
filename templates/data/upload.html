@@ -1,0 +1,391 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Upload Data - EarthScape Climate Agency{% endblock %}
+
+{% block page_content %}
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-xl">
+    <div>
+        <h1 style="margin-bottom: var(--spacing-sm);">
+            <i class="fas fa-cloud-upload-alt text-primary"></i> Data Upload
+        </h1>
+        <p class="text-secondary" style="margin: 0;">
+            Upload and process your climate data files
+        </p>
+    </div>
+    <button class="btn btn-outline" onclick="window.location.href='{% url 'data:sources' %}'">
+        <i class="fas fa-database"></i> Manage Sources
+    </button>
+</div>
+
+<!-- Main Content Grid -->
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: var(--spacing-2xl); margin-bottom: var(--spacing-2xl);">
+    <!-- Upload Form -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-upload"></i> Upload New Data
+            </h3>
+        </div>
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data" id="uploadForm">
+                {% csrf_token %}
+
+                <!-- Data Source Selection -->
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-database"></i> Data Source *
+                    </label>
+                    <select class="form-control form-select" name="data_source" required>
+                        <option value="">Select a data source...</option>
+                        {% for source in active_sources %}
+                        <option value="{{ source.id }}">
+                            {{ source.name }} ({{ source.get_source_type_display }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <div class="form-text">
+                        Choose the data source this file belongs to
+                    </div>
+                </div>
+
+                <!-- Drag & Drop File Upload -->
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-file-upload"></i> Data File *
+                    </label>
+                    
+                    <div class="file-upload" id="fileUploadZone">
+                        <input type="file" 
+                               name="data_file" 
+                               id="fileInput" 
+                               accept=".csv,.json,.xml,.txt,.xlsx" 
+                               required
+                               style="display: none;">
+                        
+                        <div id="uploadPlaceholder">
+                            <div class="file-upload-icon">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                            </div>
+                            <div class="file-upload-text">
+                                Drag & drop your file here
+                            </div>
+                            <div class="file-upload-hint">
+                                or click to browse
+                            </div>
+                            <div style="margin-top: var(--spacing-lg);">
+                                <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('fileInput').click()">
+                                    <i class="fas fa-folder-open"></i> Browse Files
+                                </button>
+                            </div>
+                            <div style="margin-top: var(--spacing-lg); font-size: var(--font-size-xs); color: var(--color-text-tertiary);">
+                                Supported: CSV, JSON, XML, TXT, XLSX (Max: 50MB)
+                            </div>
+                        </div>
+
+                        <div id="filePreview" style="display: none;">
+                            <div style="display: flex; align-items: center; gap: var(--spacing-lg); padding: var(--spacing-xl); background: var(--color-bg-secondary); border-radius: var(--radius-lg);">
+                                <div style="width: 64px; height: 64px; background: linear-gradient(135deg, var(--color-success), var(--color-success-light)); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem;">
+                                    <i class="fas fa-file-alt"></i>
+                                </div>
+                                <div style="flex: 1;">
+                                    <div id="fileName" style="font-weight: 600; font-size: var(--font-size-lg); color: var(--color-text-primary); margin-bottom: var(--spacing-xs);"></div>
+                                    <div id="fileSize" style="font-size: var(--font-size-sm); color: var(--color-text-secondary);"></div>
+                                    <div id="fileType" style="font-size: var(--font-size-xs); color: var(--color-text-tertiary); margin-top: var(--spacing-xs);"></div>
+                                </div>
+                                <button type="button" class="btn btn-danger btn-sm" onclick="clearFile()">
+                                    <i class="fas fa-times"></i> Remove
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Progress Bar (hidden initially) -->
+                <div id="uploadProgress" style="display: none; margin-top: var(--spacing-lg);">
+                    <div style="margin-bottom: var(--spacing-sm); font-weight: 600; color: var(--color-text-primary);">
+                        <i class="fas fa-spinner fa-spin"></i> Uploading...
+                    </div>
+                    <div style="height: 8px; background: var(--color-bg-tertiary); border-radius: var(--radius-full); overflow: hidden;">
+                        <div id="progressBar" style="height: 100%; background: linear-gradient(90deg, var(--color-primary), var(--color-secondary)); width: 0%; transition: width 0.3s ease;"></div>
+                    </div>
+                    <div id="progressText" style="margin-top: var(--spacing-sm); font-size: var(--font-size-sm); color: var(--color-text-secondary);">
+                        0% complete
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div style="margin-top: var(--spacing-2xl);">
+                    <button type="submit" class="btn btn-success btn-lg w-full">
+                        <i class="fas fa-upload"></i> Upload & Process Data
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Upload Guidelines -->
+    <div style="display: flex; flex-direction: column; gap: var(--spacing-lg);">
+        <!-- Guidelines Card -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-info-circle"></i> Guidelines
+                </h3>
+            </div>
+            <div class="card-body" style="font-size: var(--font-size-sm);">
+                <div style="margin-bottom: var(--spacing-lg);">
+                    <div style="font-weight: 600; color: var(--color-text-primary); margin-bottom: var(--spacing-sm);">
+                        Data Format Requirements
+                    </div>
+                    <ul style="list-style: none; padding: 0; margin: 0;">
+                        <li style="padding: var(--spacing-sm) 0; display: flex; align-items: start; gap: var(--spacing-sm);">
+                            <i class="fas fa-check text-success" style="margin-top: 2px;"></i>
+                            <span>CSV files must have headers in first row</span>
+                        </li>
+                        <li style="padding: var(--spacing-sm) 0; display: flex; align-items: start; gap: var(--spacing-sm);">
+                            <i class="fas fa-check text-success" style="margin-top: 2px;"></i>
+                            <span>Date format: YYYY-MM-DD or YYYY-MM-DD HH:MM:SS</span>
+                        </li>
+                        <li style="padding: var(--spacing-sm) 0; display: flex; align-items: start; gap: var(--spacing-sm);">
+                            <i class="fas fa-check text-success" style="margin-top: 2px;"></i>
+                            <span>Temperature in Celsius, Wind in m/s</span>
+                        </li>
+                        <li style="padding: var(--spacing-sm) 0; display: flex; align-items: start; gap: var(--spacing-sm);">
+                            <i class="fas fa-check text-success" style="margin-top: 2px;"></i>
+                            <span>Precipitation in millimeters (mm)</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div>
+                    <div style="font-weight: 600; color: var(--color-text-primary); margin-bottom: var(--spacing-sm);">
+                        Supported Formats
+                    </div>
+                    <div style="display: flex; flex-wrap: wrap; gap: var(--spacing-sm);">
+                        <span class="badge-primary">.CSV</span>
+                        <span class="badge-info">.JSON</span>
+                        <span class="badge-success">.XML</span>
+                        <span class="badge-warning">.TXT</span>
+                        <span class="badge-secondary">.XLSX</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Card -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-chart-bar"></i> Upload Stats
+                </h3>
+            </div>
+            <div class="card-body">
+                <div style="display: flex; flex-direction: column; gap: var(--spacing-md);">
+                    <div style="padding: var(--spacing-md); background: var(--color-bg-secondary); border-radius: var(--radius-md);">
+                        <div style="font-size: var(--font-size-xs); color: var(--color-text-tertiary); margin-bottom: var(--spacing-xs);">Total Uploads</div>
+                        <div style="font-size: var(--font-size-2xl); font-weight: 700; color: var(--color-primary);">
+                            {{ recent_uploads|length|default:"0" }}
+                        </div>
+                    </div>
+                    <div style="padding: var(--spacing-md); background: var(--color-bg-secondary); border-radius: var(--radius-md);">
+                        <div style="font-size: var(--font-size-xs); color: var(--color-text-tertiary); margin-bottom: var(--spacing-xs);">Success Rate</div>
+                        <div style="font-size: var(--font-size-2xl); font-weight: 700; color: var(--color-success);">
+                            95%
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Uploads -->
+<div class="card">
+    <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <h3 class="card-title">
+                <i class="fas fa-history"></i> Recent Uploads
+            </h3>
+            <span class="badge-secondary">Last 10 uploads</span>
+        </div>
+    </div>
+    <div class="card-body" style="padding: 0;">
+        {% if recent_uploads %}
+        <div class="table-wrapper" style="border: none; box-shadow: none;">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Filename</th>
+                        <th>Status</th>
+                        <th>Records</th>
+                        <th>Uploaded</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for upload in recent_uploads %}
+                    <tr>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: var(--spacing-md);">
+                                <div style="width: 40px; height: 40px; background: var(--color-bg-tertiary); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; color: var(--color-primary);">
+                                    <i class="fas fa-file-alt"></i>
+                                </div>
+                                <div>
+                                    <div style="font-weight: 600; color: var(--color-text-primary);">{{ upload.filename }}</div>
+                                    <div style="font-size: var(--font-size-xs); color: var(--color-text-tertiary);">{{ upload.file_size|default:"Unknown size" }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            {% if upload.status == 'COMPLETED' %}
+                                <span class="badge-success">
+                                    <i class="fas fa-check-circle"></i> Completed
+                                </span>
+                            {% elif upload.status == 'PROCESSING' %}
+                                <span class="badge-warning">
+                                    <i class="fas fa-spinner fa-spin"></i> Processing
+                                </span>
+                            {% elif upload.status == 'FAILED' %}
+                                <span class="badge-danger">
+                                    <i class="fas fa-exclamation-circle"></i> Failed
+                                </span>
+                            {% else %}
+                                <span class="badge-secondary">
+                                    <i class="fas fa-clock"></i> Pending
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span style="font-weight: 600; color: var(--color-text-primary);">
+                                {% if upload.records_processed %}
+                                    {{ upload.records_processed|floatformat:0 }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </span>
+                        </td>
+                        <td>
+                            <span style="font-size: var(--font-size-sm); color: var(--color-text-secondary);">
+                                {{ upload.created_at|date:"M d, Y H:i" }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if upload.errors %}
+                                <button class="btn btn-ghost btn-sm" onclick="showToast('error', 'Upload Error', '{{ upload.errors }}')">
+                                    <i class="fas fa-exclamation-triangle"></i> View Error
+                                </button>
+                            {% else %}
+                                <span style="color: var(--color-text-tertiary); font-size: var(--font-size-sm);">No issues</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div style="text-align: center; padding: var(--spacing-3xl); color: var(--color-text-tertiary);">
+            <i class="fas fa-inbox" style="font-size: 4rem; margin-bottom: var(--spacing-lg); opacity: 0.3;"></i>
+            <p style="font-size: var(--font-size-lg); margin-bottom: var(--spacing-sm);">No uploads yet</p>
+            <p style="font-size: var(--font-size-sm);">Upload your first data file to get started!</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Drag & Drop Functionality
+    const fileUploadZone = document.getElementById('fileUploadZone');
+    const fileInput = document.getElementById('fileInput');
+    const uploadPlaceholder = document.getElementById('uploadPlaceholder');
+    const filePreview = document.getElementById('filePreview');
+
+    // Click to upload
+    fileUploadZone.addEventListener('click', (e) => {
+        if (e.target.closest('#filePreview')) return;
+        fileInput.click();
+    });
+
+    // Drag over
+    fileUploadZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        fileUploadZone.classList.add('dragover');
+    });
+
+    // Drag leave
+    fileUploadZone.addEventListener('dragleave', () => {
+        fileUploadZone.classList.remove('dragover');
+    });
+
+    // Drop
+    fileUploadZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        fileUploadZone.classList.remove('dragover');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            fileInput.files = files;
+            handleFileSelect(files[0]);
+        }
+    });
+
+    // File input change
+    fileInput.addEventListener('change', (e) => {
+        const files = e.target.files;
+        if (files.length > 0) {
+            handleFileSelect(files[0]);
+        }
+    });
+
+    function handleFileSelect(file) {
+        // Show file preview
+        uploadPlaceholder.style.display = 'none';
+        filePreview.style.display = 'block';
+        
+        // Update file info
+        document.getElementById('fileName').textContent = file.name;
+        document.getElementById('fileSize').textContent = formatFileSize(file.size);
+        document.getElementById('fileType').textContent = `Type: ${file.type || 'Unknown'}`;
+    }
+
+    function clearFile() {
+        fileInput.value = '';
+        uploadPlaceholder.style.display = 'block';
+        filePreview.style.display = 'none';
+    }
+
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+    }
+
+    // Form submission with progress (simulated)
+    document.getElementById('uploadForm').addEventListener('submit', function(e) {
+        // Show progress bar
+        const progressDiv = document.getElementById('uploadProgress');
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
+        
+        progressDiv.style.display = 'block';
+        
+        // Simulate progress (in real implementation, this would track actual upload)
+        let progress = 0;
+        const interval = setInterval(() => {
+            progress += 10;
+            progressBar.style.width = progress + '%';
+            progressText.textContent = progress + '% complete';
+            
+            if (progress >= 90) {
+                clearInterval(interval);
+            }
+        }, 200);
+    });
+</script>
+{% endblock %}

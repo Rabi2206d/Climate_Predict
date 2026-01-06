@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+
+{% block title %}Model Training Results - EarthScape Climate Agency{% endblock %}
+
+{% block page_content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1><i class="fas fa-graduation-cap"></i> Model Training Results</h1>
+        <p class="text-muted">Training status and metrics for ML models</p>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Anomaly Model Results -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-exclamation-triangle"></i> Anomaly Detection Model</h5>
+            </div>
+            <div class="card-body">
+                {% if training_results.anomaly_model.success %}
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle"></i> <strong>Training Successful!</strong>
+                    </div>
+                    <div class="mb-3">
+                        <h6>Training Metrics:</h6>
+                        <ul class="list-unstyled">
+                            <li><strong>Training Samples:</strong> {{ training_results.anomaly_model.metrics.training_samples|default:"N/A" }}</li>
+                            <li><strong>Anomaly Rate:</strong> {{ training_results.anomaly_model.metrics.anomaly_rate|floatformat:3|default:"N/A" }}</li>
+                        </ul>
+                    </div>
+                    <p class="text-success mb-0">
+                        <i class="fas fa-check"></i> Model saved successfully and ready for use!
+                    </p>
+                {% else %}
+                    <div class="alert alert-danger">
+                        <i class="fas fa-times-circle"></i> <strong>Training Failed</strong>
+                    </div>
+                    <p class="text-danger">
+                        <strong>Error:</strong> {{ training_results.anomaly_model.error|default:"Unknown error" }}
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Temperature Model Results -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-thermometer-half"></i> Temperature Prediction Model</h5>
+            </div>
+            <div class="card-body">
+                {% if training_results.temperature_model.success %}
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle"></i> <strong>Training Successful!</strong>
+                    </div>
+                    <div class="mb-3">
+                        <h6>Training Metrics:</h6>
+                        <ul class="list-unstyled">
+                            <li><strong>Training Samples:</strong> {{ training_results.temperature_model.metrics.training_samples|default:"N/A" }}</li>
+                            <li><strong>R² Score:</strong> {{ training_results.temperature_model.metrics.r2_score|floatformat:3|default:"N/A" }}</li>
+                            <li><strong>MSE:</strong> {{ training_results.temperature_model.metrics.mse|floatformat:2|default:"N/A" }}</li>
+                            <li><strong>MAE:</strong> {{ training_results.temperature_model.metrics.mae|floatformat:2|default:"N/A" }}</li>
+                            <li><strong>RMSE:</strong> {{ training_results.temperature_model.metrics.rmse|floatformat:2|default:"N/A" }}</li>
+                        </ul>
+                    </div>
+                    <p class="text-success mb-0">
+                        <i class="fas fa-check"></i> Model saved successfully and ready for use!
+                    </p>
+                {% else %}
+                    <div class="alert alert-danger">
+                        <i class="fas fa-times-circle"></i> <strong>Training Failed</strong>
+                    </div>
+                    <p class="text-danger">
+                        <strong>Error:</strong> {{ training_results.temperature_model.error|default:"Unknown error" }}
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if training_results.error %}
+<div class="row">
+    <div class="col-12">
+        <div class="alert alert-danger">
+            <h5><i class="fas fa-exclamation-circle"></i> General Error</h5>
+            <p>{{ training_results.error }}</p>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="d-flex gap-2">
+            <a href="{% url 'ai_models:ai_dashboard' %}" class="btn btn-primary">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+            <a href="{% url 'ai_models:run_analysis' %}" class="btn btn-success">
+                <i class="fas fa-play"></i> Run Analysis with New Models
+            </a>
+            <form method="post" action="{% url 'ai_models:train_models' %}" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-warning" onclick="return confirm('Retrain models again?');">
+                    <i class="fas fa-redo"></i> Retrain Models
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+

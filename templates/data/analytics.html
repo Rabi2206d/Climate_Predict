@@ -1,0 +1,353 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Analytics - EarthScape Climate Agency{% endblock %}
+
+{% block page_content %}
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-xl">
+    <div>
+        <h1 style="margin-bottom: var(--spacing-sm);">
+            <i class="fas fa-chart-line text-primary"></i> Data Analytics
+        </h1>
+        <p class="text-secondary" style="margin: 0;">
+            Comprehensive climate data insights and visualizations
+        </p>
+    </div>
+    <div class="d-flex gap-md">
+        <button class="btn btn-outline" onclick="window.location.href='{% url 'data:sources' %}'">
+            <i class="fas fa-database"></i> Sources
+        </button>
+        <button class="btn btn-primary" onclick="window.location.href='{% url 'data:upload' %}'">
+            <i class="fas fa-upload"></i> Upload Data
+        </button>
+    </div>
+</div>
+
+<!-- Key Metrics -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--spacing-lg); margin-bottom: var(--spacing-2xl);">
+    <!-- Total Sources -->
+    <div class="stat-card primary">
+        <div class="stat-card-header">
+            <div class="stat-card-title">Data Sources</div>
+            <div class="stat-card-icon">
+                <i class="fas fa-database"></i>
+            </div>
+        </div>
+        <div class="stat-card-value">{{ analytics.total_sources|default:"0" }}</div>
+        <div class="stat-card-footer">
+            <i class="fas fa-satellite"></i>
+            <span>Active sources</span>
+        </div>
+    </div>
+
+    <!-- Total Data Points -->
+    <div class="stat-card success">
+        <div class="stat-card-header">
+            <div class="stat-card-title">Data Points</div>
+            <div class="stat-card-icon">
+                <i class="fas fa-chart-bar"></i>
+            </div>
+        </div>
+        <div class="stat-card-value">{{ analytics.total_data_points|default:"0"|floatformat:0 }}</div>
+        <div class="stat-card-footer">
+            <i class="fas fa-database"></i>
+            <span>Total records</span>
+        </div>
+    </div>
+
+    <!-- Average Temperature -->
+    <div class="stat-card info">
+        <div class="stat-card-header">
+            <div class="stat-card-title">Avg Temperature</div>
+            <div class="stat-card-icon">
+                <i class="fas fa-thermometer-half"></i>
+            </div>
+        </div>
+        <div class="stat-card-value">
+            {% if analytics.avg_temperature %}
+                {{ analytics.avg_temperature|floatformat:1 }}°
+            {% else %}
+                N/A
+            {% endif %}
+        </div>
+        <div class="stat-card-footer">
+            <i class="fas fa-temperature-high"></i>
+            <span>Celsius</span>
+        </div>
+    </div>
+
+    <!-- Active Monitoring -->
+    <div class="stat-card warning">
+        <div class="stat-card-header">
+            <div class="stat-card-title">Monitoring</div>
+            <div class="stat-card-icon">
+                <i class="fas fa-eye"></i>
+            </div>
+        </div>
+        <div class="stat-card-value">24/7</div>
+        <div class="stat-card-footer">
+            <span class="badge-success" style="padding: 4px 8px; border-radius: 12px;">
+                <i class="fas fa-circle" style="font-size: 6px;"></i> Live
+            </span>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Section -->
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: var(--spacing-lg); margin-bottom: var(--spacing-2xl);">
+    <!-- Source Distribution Chart -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-chart-pie"></i> Data Distribution by Source
+            </h3>
+        </div>
+        <div class="card-body">
+            {% if analytics.data_by_source %}
+            <canvas id="sourceChart" style="max-height: 400px;"></canvas>
+            {% else %}
+            <div style="text-align: center; padding: var(--spacing-3xl); color: var(--color-text-tertiary);">
+                <i class="fas fa-chart-pie" style="font-size: 4rem; margin-bottom: var(--spacing-lg); opacity: 0.3;"></i>
+                <p style="font-size: var(--font-size-lg); margin-bottom: var(--spacing-sm);">No data available</p>
+                <p style="font-size: var(--font-size-sm);">Upload data to see source distribution chart</p>
+                <button class="btn btn-primary btn-sm" style="margin-top: var(--spacing-lg);" onclick="window.location.href='{% url 'data:upload' %}'">
+                    <i class="fas fa-upload"></i> Upload Data
+                </button>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-info-circle"></i> Quick Stats
+            </h3>
+        </div>
+        <div class="card-body">
+            <div style="display: flex; flex-direction: column; gap: var(--spacing-lg);">
+                <!-- Total Sources -->
+                <div style="padding: var(--spacing-lg); background: linear-gradient(135deg, rgba(var(--color-primary-rgb), 0.1), rgba(var(--color-primary-rgb), 0.05)); border-radius: var(--radius-lg); border-left: 4px solid var(--color-primary);">
+                    <div style="font-size: var(--font-size-xs); color: var(--color-text-tertiary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: var(--spacing-sm);">
+                        Total Sources
+                    </div>
+                    <div style="font-size: var(--font-size-3xl); font-weight: 800; color: var(--color-primary);">
+                        {{ analytics.total_sources }}
+                    </div>
+                </div>
+
+                <!-- Total Data Points -->
+                <div style="padding: var(--spacing-lg); background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05)); border-radius: var(--radius-lg); border-left: 4px solid var(--color-success);">
+                    <div style="font-size: var(--font-size-xs); color: var(--color-text-tertiary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: var(--spacing-sm);">
+                        Data Points
+                    </div>
+                    <div style="font-size: var(--font-size-3xl); font-weight: 800; color: var(--color-success);">
+                        {{ analytics.total_data_points|floatformat:0 }}
+                    </div>
+                </div>
+
+                <!-- Average Temperature -->
+                <div style="padding: var(--spacing-lg); background: linear-gradient(135deg, rgba(6, 182, 212, 0.1), rgba(6, 182, 212, 0.05)); border-radius: var(--radius-lg); border-left: 4px solid var(--color-info);">
+                    <div style="font-size: var(--font-size-xs); color: var(--color-text-tertiary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: var(--spacing-sm);">
+                        Avg Temperature
+                    </div>
+                    <div style="font-size: var(--font-size-3xl); font-weight: 800; color: var(--color-info);">
+                        {% if analytics.avg_temperature %}
+                            {{ analytics.avg_temperature|floatformat:1 }}°C
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Last Updated -->
+                <div style="padding: var(--spacing-md); text-align: center; border-top: 1px solid var(--color-border); margin-top: var(--spacing-md);">
+                    <div style="font-size: var(--font-size-xs); color: var(--color-text-tertiary);">
+                        <i class="fas fa-clock"></i> Data updated in real-time
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Data by Source Table -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="fas fa-table"></i> Data Points by Source
+        </h3>
+    </div>
+    <div class="card-body" style="padding: 0;">
+        {% if analytics.data_by_source %}
+        <div class="table-wrapper" style="border: none; box-shadow: none;">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Source Name</th>
+                        <th>Type</th>
+                        <th>Data Points</th>
+                        <th>Percentage</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for source in analytics.data_by_source %}
+                    <tr>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: var(--spacing-md);">
+                                <div style="width: 40px; height: 40px; background: linear-gradient(135deg, var(--color-primary), var(--color-secondary)); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; color: white;">
+                                    <i class="fas fa-database"></i>
+                                </div>
+                                <div>
+                                    <div style="font-weight: 600; color: var(--color-text-primary);">{{ source.name }}</div>
+                                    <div style="font-size: var(--font-size-xs); color: var(--color-text-tertiary);">ID: {{ source.id }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge-info">{{ source.source_type|default:"N/A" }}</span>
+                        </td>
+                        <td>
+                            <span style="font-weight: 700; font-size: var(--font-size-lg); color: var(--color-primary);">
+                                {{ source.count|floatformat:0 }}
+                            </span>
+                        </td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: var(--spacing-md);">
+                                <div style="flex: 1; height: 8px; background: var(--color-bg-tertiary); border-radius: var(--radius-full); overflow: hidden; min-width: 100px;">
+                                    <div style="height: 100%; background: linear-gradient(90deg, var(--color-primary), var(--color-secondary)); width: {% if analytics.total_data_points > 0 %}{% widthratio source.count analytics.total_data_points 100 %}{% else %}0{% endif %}%; transition: width 0.3s ease;"></div>
+                                </div>
+                                <span style="font-weight: 600; min-width: 40px;">
+                                    {% if analytics.total_data_points > 0 %}
+                                        {% widthratio source.count analytics.total_data_points 100 %}%
+                                    {% else %}
+                                        0%
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge-success">
+                                <i class="fas fa-circle" style="font-size: 6px;"></i> Active
+                            </span>
+                        </td>
+                        <td>
+                            <button class="btn btn-ghost btn-sm" onclick="window.location.href='{% url 'data:detailed_analytics' %}'">
+                                <i class="fas fa-eye"></i> View
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div style="text-align: center; padding: var(--spacing-3xl); color: var(--color-text-tertiary);">
+            <i class="fas fa-inbox" style="font-size: 4rem; margin-bottom: var(--spacing-lg); opacity: 0.3;"></i>
+            <p style="font-size: var(--font-size-lg); margin-bottom: var(--spacing-sm);">No data available for analysis yet</p>
+            <p style="font-size: var(--font-size-sm); margin-bottom: var(--spacing-lg);">Upload climate data to start seeing insights</p>
+            <button class="btn btn-primary" onclick="window.location.href='{% url 'data:upload' %}'">
+                <i class="fas fa-upload"></i> Upload Your First Data
+            </button>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+{% if analytics.data_by_source %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Source distribution data
+    const sourceData = {{ analytics.data_by_source|safe }};
+    
+    if (sourceData && sourceData.length > 0) {
+        const ctx = document.getElementById('sourceChart');
+        
+        if (ctx) {
+            // Modern color palette
+            const colors = [
+                { bg: 'rgba(59, 130, 246, 0.8)', border: 'rgb(59, 130, 246)' },
+                { bg: 'rgba(16, 185, 129, 0.8)', border: 'rgb(16, 185, 129)' },
+                { bg: 'rgba(245, 158, 11, 0.8)', border: 'rgb(245, 158, 11)' },
+                { bg: 'rgba(239, 68, 68, 0.8)', border: 'rgb(239, 68, 68)' },
+                { bg: 'rgba(139, 92, 246, 0.8)', border: 'rgb(139, 92, 246)' },
+                { bg: 'rgba(6, 182, 212, 0.8)', border: 'rgb(6, 182, 212)' },
+                { bg: 'rgba(236, 72, 153, 0.8)', border: 'rgb(236, 72, 153)' },
+            ];
+            
+            new Chart(ctx.getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: sourceData.map(item => item.name),
+                    datasets: [{
+                        data: sourceData.map(item => item.count),
+                        backgroundColor: colors.map(c => c.bg),
+                        borderColor: colors.map(c => c.border),
+                        borderWidth: 2,
+                        hoverOffset: 20
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                font: {
+                                    size: 12,
+                                    family: "'Inter', sans-serif",
+                                    weight: 500
+                                },
+                                usePointStyle: true,
+                                pointStyle: 'circle'
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                            titleFont: {
+                                size: 14,
+                                family: "'Inter', sans-serif",
+                                weight: 600
+                            },
+                            bodyFont: {
+                                size: 13,
+                                family: "'Inter', sans-serif"
+                            },
+                            padding: 12,
+                            borderColor: 'rgba(255, 255, 255, 0.1)',
+                            borderWidth: 1,
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed || 0;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return `${label}: ${value.toLocaleString()} records (${percentage}%)`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '65%',
+                    animation: {
+                        animateRotate: true,
+                        animateScale: true,
+                        duration: 1000,
+                        easing: 'easeInOutQuart'
+                    }
+                }
+            });
+        }
+    }
+});
+</script>
+{% endif %}
+{% endblock %}

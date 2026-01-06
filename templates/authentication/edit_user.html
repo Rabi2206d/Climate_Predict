@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit User - EarthScape Climate Agency{% endblock %}
+
+{% block page_content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4><i class="fas fa-user-edit"></i> Edit User: {{ edit_user.username }}</h4>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Username:</strong> {{ edit_user.username }} <em>(cannot be changed)</em>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">First Name</label>
+                            <input type="text" class="form-control" name="first_name" value="{{ edit_user.first_name }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Last Name</label>
+                            <input type="text" class="form-control" name="last_name" value="{{ edit_user.last_name }}">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" name="email" value="{{ edit_user.email }}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Role</label>
+                        <select class="form-select" name="role">
+                            {% for role_value, role_name in roles %}
+                            <option value="{{ role_value }}" {% if edit_user.role == role_value %}selected{% endif %}>
+                                {{ role_name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        {% if edit_user.role == 'ADMIN' %}
+                        <small class="text-warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            Changing role from Administrator will remove admin privileges.
+                        </small>
+                        {% endif %}
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Department</label>
+                            <input type="text" class="form-control" name="department" value="{{ edit_user.department }}" placeholder="e.g., Data Analysis, IT, Research">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Phone</label>
+                            <input type="text" class="form-control" name="phone" value="{{ edit_user.phone }}" placeholder="+1-555-0123">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="is_active" {% if edit_user.is_active %}checked{% endif %} id="is_active">
+                            <label class="form-check-label" for="is_active">
+                                Account Active
+                            </label>
+                        </div>
+                        <small class="text-muted">
+                            Inactive users cannot login to the system
+                        </small>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Join Date:</strong> {{ edit_user.date_joined|date:"M d, Y" }}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Last Login:</strong>
+                            {% if edit_user.last_login %}
+                                {{ edit_user.last_login|date:"M d, Y H:i" }}
+                            {% else %}
+                                <em class="text-muted">Never</em>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    {% if edit_user.is_superuser %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Django Superuser:</strong> This user has Django superuser privileges.
+                        Be careful when modifying their account.
+                    </div>
+                    {% endif %}
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'authentication:user_list' %}" class="btn btn-secondary me-md-2">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Update User
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

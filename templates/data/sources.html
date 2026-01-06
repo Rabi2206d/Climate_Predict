@@ -1,0 +1,631 @@
+{% extends 'base.html' %}
+
+{% block title %}Data Sources - EarthScape Climate Agency{% endblock %}
+
+{% block page_content %}
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center" style="margin-bottom: var(--spacing-2xl); flex-wrap: wrap; gap: var(--spacing-lg);">
+    <div>
+        <h1 style="margin-bottom: var(--spacing-sm);">
+            <i class="fas fa-database text-primary"></i> Data Sources
+        </h1>
+        <p class="text-secondary" style="margin: 0;">
+            Manage and monitor your climate data sources
+        </p>
+    </div>
+    <div class="d-flex gap-md" style="flex-wrap: wrap;">
+        <a href="{% url 'data:upload' %}" class="btn btn-outline">
+            <i class="fas fa-upload"></i> Upload Data
+        </a>
+        <button class="btn btn-primary" onclick="document.getElementById('addSourceModal').style.display='flex'; document.getElementById('addSourceModal').style.zIndex='9999'; document.body.style.overflow='hidden';" type="button">
+            <i class="fas fa-plus"></i> Add Source
+        </button>
+    </div>
+</div>
+
+{% if sources %}
+<!-- Data Sources Grid -->
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: var(--spacing-xl); margin-bottom: var(--spacing-2xl);">
+    {% for source in sources %}
+    <div class="card">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start" style="margin-bottom: var(--spacing-lg);">
+                <div style="display: flex; align-items: center; gap: var(--spacing-md);">
+                    <div style="width: 56px; height: 56px; border-radius: var(--radius-lg); background: linear-gradient(135deg, var(--color-primary), var(--color-secondary)); display: flex; align-items: center; justify-content: center; color: white; font-size: 1.5rem;">
+                        {% if source.source_type == 'WEATHER_STATION' %}
+                            <i class="fas fa-broadcast-tower"></i>
+                        {% elif source.source_type == 'SATELLITE' %}
+                            <i class="fas fa-satellite"></i>
+                        {% elif source.source_type == 'SENSOR' or source.source_type == 'SENSOR_NETWORK' %}
+                            <i class="fas fa-network-wired"></i>
+                        {% else %}
+                            <i class="fas fa-database"></i>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <h3 style="font-size: var(--font-size-lg); font-weight: 700; margin-bottom: var(--spacing-xs); color: var(--color-text-primary);">
+                            {{ source.name }}
+                        </h3>
+                        <span class="badge-info">{{ source.get_source_type_display }}</span>
+                    </div>
+                </div>
+                {% if source.is_active %}
+                    <span class="badge-success">
+                        <i class="fas fa-circle" style="font-size: 6px;"></i> Active
+                    </span>
+                {% else %}
+                    <span class="badge-secondary">
+                        <i class="fas fa-pause-circle"></i> Inactive
+                    </span>
+                {% endif %}
+            </div>
+            
+            {% if source.description %}
+            <p style="font-size: var(--font-size-sm); color: var(--color-text-secondary); margin-bottom: var(--spacing-lg); line-height: var(--line-height-relaxed);">
+                {{ source.description|truncatewords:15 }}
+            </p>
+            {% endif %}
+            
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--spacing-md); padding: var(--spacing-lg); background: var(--color-bg-secondary); border-radius: var(--radius-lg); margin-bottom: var(--spacing-lg);">
+                <div style="text-align: center;">
+                    <div style="font-size: var(--font-size-xl); font-weight: 700; color: var(--color-primary); margin-bottom: var(--spacing-xs);">
+                        {{ source.total_data_points|default:0 }}
+                    </div>
+                    <div style="font-size: var(--font-size-xs); color: var(--color-text-tertiary);">Data Points</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: var(--font-size-xl); font-weight: 700; color: var(--color-info); margin-bottom: var(--spacing-xs);">
+                        {% if source.location %}
+                            <i class="fas fa-map-marker-alt"></i>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </div>
+                    <div style="font-size: var(--font-size-xs); color: var(--color-text-tertiary);">
+                        {% if source.location %}{{ source.location|truncatewords:2 }}{% else %}No location{% endif %}
+                    </div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: var(--font-size-xl); font-weight: 700; color: var(--color-success); margin-bottom: var(--spacing-xs);">
+                        {% if source.last_update %}
+                            <i class="fas fa-clock"></i>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </div>
+                    <div style="font-size: var(--font-size-xs); color: var(--color-text-tertiary);">
+                        {% if source.last_update %}
+                            {{ source.last_update|timesince|truncatewords:1 }} ago
+                        {% else %}
+                            No data
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: var(--spacing-sm); flex-wrap: wrap;">
+                <!-- eslint-disable-next-line -->
+                <button class="btn btn-ghost btn-sm" onclick="window.viewSource('{{ source.id }}')" type="button">
+                    <i class="fas fa-eye"></i> View
+                </button>
+                <!-- eslint-disable-next-line -->
+                <button class="btn btn-ghost btn-sm" onclick="window.editSource('{{ source.id }}')" type="button">
+                    <i class="fas fa-edit"></i> Edit
+                </button>
+                {% if source.is_active %}
+                <!-- eslint-disable-next-line -->
+                <button class="btn btn-ghost btn-sm" onclick="toggleSource('{{ source.id }}', false)" title="Deactivate">
+                    <i class="fas fa-pause"></i>
+                </button>
+                {% else %}
+                <!-- eslint-disable-next-line -->
+                <button class="btn btn-ghost btn-sm" onclick="toggleSource('{{ source.id }}', true)" title="Activate">
+                    <i class="fas fa-play"></i>
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<!-- Empty State -->
+<div style="text-align: center; padding: var(--spacing-3xl); color: var(--color-text-tertiary);">
+    <i class="fas fa-database" style="font-size: 5rem; margin-bottom: var(--spacing-xl); opacity: 0.2;"></i>
+    <h3 style="font-size: var(--font-size-2xl); font-weight: 700; color: var(--color-text-primary); margin-bottom: var(--spacing-sm);">
+        No Data Sources Yet
+    </h3>
+    <p style="font-size: var(--font-size-base); margin-bottom: var(--spacing-xl); max-width: 500px; margin-left: auto; margin-right: auto;">
+        Get started by connecting your first data source to begin monitoring climate data.
+    </p>
+    <button class="btn btn-primary btn-lg" onclick="document.getElementById('addSourceModal').style.display='flex'; document.getElementById('addSourceModal').style.zIndex='9999'; document.body.style.overflow='hidden';" type="button">
+        <i class="fas fa-plus"></i> Add Your First Data Source
+    </button>
+</div>
+{% endif %}
+
+<!-- Add Source Modal -->
+<div id="addSourceModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); z-index: 9999; align-items: center; justify-content: center; padding: var(--spacing-xl);">
+    <div class="card" style="max-width: 600px; width: 100%; margin: 0; animation: scaleIn 0.3s ease-out;">
+        <div class="card-header" style="background: linear-gradient(135deg, var(--color-primary), var(--color-secondary)); color: white;">
+            <div class="d-flex justify-content-between align-items-center">
+                <h3 style="color: white; margin: 0;">
+                    <i class="fas fa-plus-circle"></i> Add New Data Source
+                </h3>
+                <button onclick="document.getElementById('addSourceModal').style.display='none'; document.body.style.overflow='';" type="button" style="background: none; border: none; color: white; font-size: var(--font-size-xl); cursor: pointer; padding: var(--spacing-sm);">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+        <form method="post" id="addSourceForm">
+            {% csrf_token %}
+            <div class="card-body">
+                <div class="form-group" style="margin-bottom: var(--spacing-xl);">
+                    <label class="form-label">
+                        <i class="fas fa-tag"></i> Source Name *
+                    </label>
+                    <input type="text" class="form-control" name="name" required placeholder="e.g., Downtown Weather Station">
+                </div>
+
+                <div class="form-group" style="margin-bottom: var(--spacing-xl);">
+                    <label class="form-label">
+                        <i class="fas fa-filter"></i> Source Type *
+                    </label>
+                    <select class="form-control form-select" name="source_type" required>
+                        <option value="">Select type...</option>
+                        <option value="WEATHER_STATION">Weather Station</option>
+                        <option value="SATELLITE">Satellite Feed</option>
+                        <option value="SENSOR">Environmental Sensor</option>
+                        <option value="HISTORICAL">Historical Data</option>
+                        <option value="REALTIME">Real-time Data</option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="margin-bottom: var(--spacing-xl);">
+                    <label class="form-label">
+                        <i class="fas fa-map-marker-alt"></i> Location
+                    </label>
+                    <input type="text" class="form-control" name="location" placeholder="e.g., Seattle, WA">
+                </div>
+
+                <div class="form-group" style="margin-bottom: var(--spacing-xl);">
+                    <label class="form-label">
+                        <i class="fas fa-align-left"></i> Description
+                    </label>
+                    <textarea class="form-control" name="description" rows="3" placeholder="Optional description..."></textarea>
+                </div>
+
+                <div style="padding: var(--spacing-lg); background: var(--color-bg-secondary); border-radius: var(--radius-lg); margin-bottom: 0;">
+                    <label style="display: flex; align-items: center; gap: var(--spacing-md); cursor: pointer;">
+                        <input type="checkbox" name="is_active" checked style="width: 20px; height: 20px; cursor: pointer; accent-color: var(--color-success);">
+                        <div>
+                            <div style="font-weight: 600; color: var(--color-text-primary); margin-bottom: var(--spacing-xs);">Activate immediately</div>
+                            <div style="font-size: var(--font-size-sm); color: var(--color-text-tertiary);">Enable this data source right away</div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+            <div class="card-footer" style="display: flex; gap: var(--spacing-md); justify-content: flex-end; padding: var(--spacing-lg) var(--spacing-xl);">
+                <button type="button" class="btn btn-outline" onclick="document.getElementById('addSourceModal').style.display='none'; document.body.style.overflow='';">
+                    Cancel
+                </button>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Add Source
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- View Source Modal -->
+<div id="viewSourceModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); z-index: 9999; align-items: center; justify-content: center; padding: var(--spacing-xl);">
+    <div class="card" style="max-width: 800px; width: 100%; margin: 0; animation: scaleIn 0.3s ease-out; max-height: 90vh; overflow-y: auto;">
+        <div class="card-header" style="background: linear-gradient(135deg, var(--color-info), var(--color-info-light)); color: white;">
+            <div class="d-flex justify-content-between align-items-center">
+                <h3 style="color: white; margin: 0;">
+                    <i class="fas fa-eye"></i> View Data Source
+                </h3>
+                <button onclick="closeViewModal()" style="background: none; border: none; color: white; font-size: var(--font-size-xl); cursor: pointer; padding: var(--spacing-sm);">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+        <div class="card-body" id="viewSourceContent">
+            <div style="text-align: center; padding: var(--spacing-2xl);">
+                <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: var(--color-primary);"></i>
+                <p style="margin-top: var(--spacing-md); color: var(--color-text-secondary);">Loading source details...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Source Modal -->
+<div id="editSourceModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); z-index: 9999; align-items: center; justify-content: center; padding: var(--spacing-xl);">
+    <div class="card" style="max-width: 600px; width: 100%; margin: 0; animation: scaleIn 0.3s ease-out;">
+        <div class="card-header" style="background: linear-gradient(135deg, var(--color-warning), var(--color-warning-light)); color: white;">
+            <div class="d-flex justify-content-between align-items-center">
+                <h3 style="color: white; margin: 0;">
+                    <i class="fas fa-edit"></i> Edit Data Source
+                </h3>
+                <button onclick="closeEditModal()" style="background: none; border: none; color: white; font-size: var(--font-size-xl); cursor: pointer; padding: var(--spacing-sm);">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+        <form method="post" id="editSourceForm" action="">
+            {% csrf_token %}
+            <div class="card-body" id="editSourceContent">
+                <div style="text-align: center; padding: var(--spacing-2xl);">
+                    <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: var(--color-primary);"></i>
+                    <p style="margin-top: var(--spacing-md); color: var(--color-text-secondary);">Loading source data...</p>
+                </div>
+            </div>
+            <div class="card-footer" style="display: flex; gap: var(--spacing-md); justify-content: flex-end; padding: var(--spacing-lg) var(--spacing-xl);">
+                <button type="button" class="btn btn-outline" onclick="closeEditModal()">Cancel</button>
+                <button type="submit" class="btn btn-warning">
+                    <i class="fas fa-save"></i> Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Make functions globally accessible
+    window.viewSource = function(id) {
+        console.log('viewSource called with id:', id);
+        const modal = document.getElementById('viewSourceModal');
+        const content = document.getElementById('viewSourceContent');
+        
+        if (!modal || !content) {
+            console.error('Modal elements not found');
+            alert('Modal elements not found. Please refresh the page.');
+            return;
+        }
+        
+        // Show loading state
+        content.innerHTML = `
+            <div style="text-align: center; padding: var(--spacing-2xl);">
+                <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: var(--color-primary);"></i>
+                <p style="margin-top: var(--spacing-md); color: var(--color-text-secondary);">Loading source details...</p>
+            </div>
+        `;
+        modal.style.display = 'flex';
+        modal.style.zIndex = '9999';
+        document.body.style.overflow = 'hidden'; // Prevent background scrolling
+        
+        // Get CSRF token
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+                         document.querySelector('input[name="csrfmiddlewaretoken"]')?.value ||
+                         document.cookie.match(/csrftoken=([^;]+)/)?.[1];
+        
+        // Fetch source details
+        fetch(`/data/sources/${id}/get/`, {
+            method: 'GET',
+            headers: {
+                'X-CSRFToken': csrfToken || '',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const source = data.source;
+                
+                // Get source type display name
+                const sourceTypeNames = {
+                    'WEATHER_STATION': 'Weather Station',
+                    'SATELLITE': 'Satellite Feed',
+                    'SENSOR': 'Environmental Sensor',
+                    'SENSOR_NETWORK': 'Sensor Network',
+                    'HISTORICAL': 'Historical Data',
+                    'REALTIME': 'Real-time Data',
+                    'API': 'API Connection',
+                    'MANUAL': 'Manual Entry'
+                };
+                
+                content.innerHTML = `
+                    <div style="margin-bottom: var(--spacing-xl);">
+                        <div style="display: flex; align-items: center; gap: var(--spacing-lg); margin-bottom: var(--spacing-lg);">
+                            <div style="width: 80px; height: 80px; border-radius: var(--radius-xl); background: linear-gradient(135deg, var(--color-info), var(--color-info-light)); display: flex; align-items: center; justify-content: center; color: white; font-size: 2.5rem;">
+                                <i class="fas fa-database"></i>
+                            </div>
+                            <div style="flex: 1;">
+                                <h2 style="font-size: var(--font-size-2xl); font-weight: 700; margin-bottom: var(--spacing-xs); color: var(--color-text-primary);">
+                                    ${source.name}
+                                </h2>
+                                <div style="display: flex; gap: var(--spacing-md); align-items: center; flex-wrap: wrap;">
+                                    <span class="badge-info">${sourceTypeNames[source.source_type] || source.source_type}</span>
+                                    ${source.is_active ? 
+                                        '<span class="badge-success"><i class="fas fa-circle" style="font-size: 6px;"></i> Active</span>' : 
+                                        '<span class="badge-secondary"><i class="fas fa-pause-circle"></i> Inactive</span>'
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                        
+                        ${source.description ? `
+                            <div style="padding: var(--spacing-lg); background: var(--color-bg-secondary); border-radius: var(--radius-lg); margin-bottom: var(--spacing-lg);">
+                                <div style="font-weight: 600; color: var(--color-text-primary); margin-bottom: var(--spacing-sm);">Description</div>
+                                <div style="color: var(--color-text-secondary);">${source.description}</div>
+                            </div>
+                        ` : ''}
+                        
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--spacing-lg); margin-bottom: var(--spacing-lg);">
+                            <div style="padding: var(--spacing-lg); background: var(--color-bg-secondary); border-radius: var(--radius-lg);">
+                                <div style="font-size: var(--font-size-xs); color: var(--color-text-tertiary); margin-bottom: var(--spacing-xs);">Location</div>
+                                <div style="font-weight: 600; color: var(--color-text-primary);">
+                                    ${source.location || 'Not specified'}
+                                </div>
+                            </div>
+                            <div style="padding: var(--spacing-lg); background: var(--color-bg-secondary); border-radius: var(--radius-lg);">
+                                <div style="font-size: var(--font-size-xs); color: var(--color-text-tertiary); margin-bottom: var(--spacing-xs);">Source ID</div>
+                                <div style="font-weight: 600; color: var(--color-text-primary);">
+                                    #${source.id}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        ${source.latitude && source.longitude ? `
+                            <div style="padding: var(--spacing-lg); background: var(--color-bg-secondary); border-radius: var(--radius-lg); margin-bottom: var(--spacing-lg);">
+                                <div style="font-size: var(--font-size-xs); color: var(--color-text-tertiary); margin-bottom: var(--spacing-xs);">Coordinates</div>
+                                <div style="font-weight: 600; color: var(--color-text-primary);">
+                                    ${source.latitude}, ${source.longitude}
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            } else {
+                content.innerHTML = `
+                    <div style="text-align: center; padding: var(--spacing-2xl);">
+                        <i class="fas fa-exclamation-circle" style="font-size: 3rem; color: var(--color-danger); margin-bottom: var(--spacing-md);"></i>
+                        <p style="color: var(--color-text-secondary);">${data.error || 'Failed to load source details'}</p>
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            content.innerHTML = `
+                <div style="text-align: center; padding: var(--spacing-2xl);">
+                    <i class="fas fa-exclamation-circle" style="font-size: 3rem; color: var(--color-danger); margin-bottom: var(--spacing-md);"></i>
+                    <p style="color: var(--color-text-secondary);">Error loading source details. Please try again.</p>
+                </div>
+            `;
+        });
+    };
+
+    window.editSource = function(id) {
+        console.log('editSource called with id:', id);
+        const modal = document.getElementById('editSourceModal');
+        const content = document.getElementById('editSourceContent');
+        const form = document.getElementById('editSourceForm');
+        
+        if (!modal || !content || !form) {
+            console.error('Modal elements not found');
+            alert('Modal elements not found. Please refresh the page.');
+            return;
+        }
+        
+        // Show loading state
+        content.innerHTML = `
+            <div style="text-align: center; padding: var(--spacing-2xl);">
+                <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: var(--color-primary);"></i>
+                <p style="margin-top: var(--spacing-md); color: var(--color-text-secondary);">Loading source data...</p>
+            </div>
+        `;
+        modal.style.display = 'flex';
+        modal.style.zIndex = '9999';
+        document.body.style.overflow = 'hidden'; // Prevent background scrolling
+        
+        // Get CSRF token
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+                         document.querySelector('input[name="csrfmiddlewaretoken"]')?.value ||
+                         document.cookie.match(/csrftoken=([^;]+)/)?.[1];
+        
+        // Fetch source data
+        fetch(`/data/sources/${id}/get/`, {
+            method: 'GET',
+            headers: {
+                'X-CSRFToken': csrfToken || '',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const source = data.source;
+                
+                // Update form action
+                form.action = `/data/sources/${id}/update/`;
+                
+                // Populate form
+                content.innerHTML = `
+                    <div class="form-group" style="margin-bottom: var(--spacing-xl);">
+                        <label class="form-label">
+                            <i class="fas fa-tag"></i> Source Name *
+                        </label>
+                        <input type="text" class="form-control" name="name" value="${source.name || ''}" required placeholder="e.g., Downtown Weather Station">
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: var(--spacing-xl);">
+                        <label class="form-label">
+                            <i class="fas fa-filter"></i> Source Type *
+                        </label>
+                        <select class="form-control form-select" name="source_type" required>
+                            <option value="">Select type...</option>
+                            <option value="WEATHER_STATION" ${source.source_type === 'WEATHER_STATION' ? 'selected' : ''}>Weather Station</option>
+                            <option value="SATELLITE" ${source.source_type === 'SATELLITE' ? 'selected' : ''}>Satellite Feed</option>
+                            <option value="SENSOR" ${source.source_type === 'SENSOR' ? 'selected' : ''}>Environmental Sensor</option>
+                            <option value="HISTORICAL" ${source.source_type === 'HISTORICAL' ? 'selected' : ''}>Historical Data</option>
+                            <option value="REALTIME" ${source.source_type === 'REALTIME' ? 'selected' : ''}>Real-time Data</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: var(--spacing-xl);">
+                        <label class="form-label">
+                            <i class="fas fa-map-marker-alt"></i> Location
+                        </label>
+                        <input type="text" class="form-control" name="location" value="${source.location || ''}" placeholder="e.g., Seattle, WA">
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: var(--spacing-xl);">
+                        <label class="form-label">
+                            <i class="fas fa-align-left"></i> Description
+                        </label>
+                        <textarea class="form-control" name="description" rows="3" placeholder="Optional description...">${source.description || ''}</textarea>
+                    </div>
+
+                    <div style="padding: var(--spacing-lg); background: var(--color-bg-secondary); border-radius: var(--radius-lg); margin-bottom: 0;">
+                        <label style="display: flex; align-items: center; gap: var(--spacing-md); cursor: pointer;">
+                            <input type="checkbox" name="is_active" ${source.is_active ? 'checked' : ''} style="width: 20px; height: 20px; cursor: pointer; accent-color: var(--color-success);">
+                            <div>
+                                <div style="font-weight: 600; color: var(--color-text-primary); margin-bottom: var(--spacing-xs);">Active Status</div>
+                                <div style="font-size: var(--font-size-sm); color: var(--color-text-tertiary);">Enable or disable this data source</div>
+                            </div>
+                        </label>
+                    </div>
+                `;
+            } else {
+                content.innerHTML = `
+                    <div style="text-align: center; padding: var(--spacing-2xl);">
+                        <i class="fas fa-exclamation-circle" style="font-size: 3rem; color: var(--color-danger); margin-bottom: var(--spacing-md);"></i>
+                        <p style="color: var(--color-text-secondary);">${data.error || 'Failed to load source data'}</p>
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            content.innerHTML = `
+                <div style="text-align: center; padding: var(--spacing-2xl);">
+                    <i class="fas fa-exclamation-circle" style="font-size: 3rem; color: var(--color-danger); margin-bottom: var(--spacing-md);"></i>
+                    <p style="color: var(--color-text-secondary);">Error loading source data. Please try again.</p>
+                </div>
+            `;
+        });
+    };
+
+    window.closeViewModal = function() {
+        const modal = document.getElementById('viewSourceModal');
+        if (modal) {
+            modal.style.display = 'none';
+            document.body.style.overflow = ''; // Restore scrolling
+        }
+    };
+
+    window.closeEditModal = function() {
+        const modal = document.getElementById('editSourceModal');
+        if (modal) {
+            modal.style.display = 'none';
+            document.body.style.overflow = ''; // Restore scrolling
+        }
+    };
+
+    // Close modals on outside click
+    document.addEventListener('DOMContentLoaded', function() {
+        const addModal = document.getElementById('addSourceModal');
+        const viewModal = document.getElementById('viewSourceModal');
+        const editModal = document.getElementById('editSourceModal');
+        
+        if (addModal) {
+            addModal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.style.display = 'none';
+                    document.body.style.overflow = '';
+                }
+            });
+        }
+        
+        if (viewModal) {
+            viewModal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeViewModal();
+                }
+            });
+        }
+        
+        if (editModal) {
+            editModal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeEditModal();
+                }
+            });
+        }
+    });
+
+    
+    // Handle edit form submission
+    document.getElementById('editSourceForm')?.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const form = this;
+        const formData = new FormData(form);
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        
+        // Handle checkbox for is_active - checkboxes send 'on' when checked, nothing when unchecked
+        if (formData.has('is_active') && formData.get('is_active') === 'on') {
+            formData.set('is_active', 'true');
+        } else {
+            formData.set('is_active', 'false');
+        }
+        
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast('success', 'Success', data.message || 'Data source updated successfully');
+                closeEditModal();
+                setTimeout(() => window.location.reload(), 1000);
+            } else {
+                showToast('error', 'Error', data.error || 'Failed to update data source');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            }
+        })
+        .catch(error => {
+            showToast('error', 'Error', 'Failed to update data source');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        });
+    });
+    
+    function toggleSource(id, activate) {
+        const action = activate ? 'activate' : 'deactivate';
+        if (confirm(`Are you sure you want to ${action} this data source?`)) {
+            // Make AJAX call to toggle
+            fetch(`/data/sources/${id}/toggle/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('success', 'Success', data.message || `Data source ${action}d successfully`);
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    showToast('error', 'Error', data.error || 'Failed to toggle source');
+                }
+            })
+            .catch(error => {
+                showToast('error', 'Error', 'Failed to toggle data source');
+            });
+        }
+    }
+</script>
+{% endblock %}

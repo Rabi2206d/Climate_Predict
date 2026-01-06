@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+
+{% block title %}Notifications - EarthScape Climate Agency{% endblock %}
+
+{% block page_content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1><i class="fas fa-bell"></i> Notifications</h1>
+                <p class="text-muted">View and manage your system notifications and alerts</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+{% if summary %}
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Unread Notifications</h6>
+                        <h3>{{ summary.unread_count }}</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-envelope fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-danger text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Alerts This Week</h6>
+                        <h3>{{ summary.alerts_this_week }}</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-exclamation-circle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Total Notifications</h6>
+                        <h3>{{ notifications|length }}</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-bell fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Notifications List -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5><i class="fas fa-list"></i> All Notifications</h5>
+                {% if summary.unread_count > 0 %}
+                <button class="btn btn-sm btn-primary" onclick="markAllAsRead()">
+                    <i class="fas fa-check-double"></i> Mark All as Read
+                </button>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                {% if notifications %}
+                <div class="list-group">
+                    {% for notification in notifications %}
+                    <div class="list-group-item {% if not notification.is_read %}list-group-item-warning{% endif %}">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-center mb-2">
+                                    <h6 class="mb-0 me-2">
+                                        {% if notification.notification_type == 'ALERT' %}
+                                            <span class="badge bg-danger"><i class="fas fa-exclamation-triangle"></i> Alert</span>
+                                        {% elif notification.notification_type == 'SYSTEM' %}
+                                            <span class="badge bg-info"><i class="fas fa-info-circle"></i> System</span>
+                                        {% elif notification.notification_type == 'DATA' %}
+                                            <span class="badge bg-primary"><i class="fas fa-database"></i> Data</span>
+                                        {% elif notification.notification_type == 'SECURITY' %}
+                                            <span class="badge bg-dark"><i class="fas fa-shield-alt"></i> Security</span>
+                                        {% endif %}
+                                        
+                                        {% if notification.priority == 'CRITICAL' %}
+                                            <span class="badge bg-danger">CRITICAL</span>
+                                        {% elif notification.priority == 'HIGH' %}
+                                            <span class="badge bg-warning">HIGH</span>
+                                        {% elif notification.priority == 'MEDIUM' %}
+                                            <span class="badge bg-info">MEDIUM</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">LOW</span>
+                                        {% endif %}
+                                        
+                                        {% if not notification.is_read %}
+                                            <span class="badge bg-warning">NEW</span>
+                                        {% endif %}
+                                    </h6>
+                                </div>
+                                <h6 class="mb-1">{{ notification.title }}</h6>
+                                <p class="mb-1">{{ notification.message }}</p>
+                                <small class="text-muted">
+                                    <i class="fas fa-clock"></i> {{ notification.created_at|date:"M d, Y H:i" }}
+                                    {% if notification.climate_data %}
+                                        | <i class="fas fa-thermometer-half"></i> Related to climate data
+                                    {% endif %}
+                                    {% if notification.alert_threshold %}
+                                        | <i class="fas fa-sliders-h"></i> Threshold: {{ notification.alert_threshold.name }}
+                                    {% endif %}
+                                </small>
+                            </div>
+                            <div class="ms-3">
+                                {% if not notification.is_read %}
+                                <button class="btn btn-sm btn-outline-primary" onclick="markAsRead({{ notification.id }})">
+                                    <i class="fas fa-check"></i> Mark Read
+                                </button>
+                                {% else %}
+                                <span class="badge bg-success"><i class="fas fa-check"></i> Read</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-bell-slash fa-4x text-muted mb-3"></i>
+                    <h4 class="text-muted">No Notifications</h4>
+                    <p class="text-muted">You're all caught up! No new notifications.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function markAsRead(notificationId) {
+    fetch('{% url "notifications:mark_read" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: 'notification_ids[]=' + notificationId
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        }
+    });
+}
+
+function markAllAsRead() {
+    const notificationIds = Array.from(document.querySelectorAll('.list-group-item-warning'))
+        .map(item => {
+            const btn = item.querySelector('button[onclick^="markAsRead"]');
+            return btn ? btn.getAttribute('onclick').match(/\d+/)[0] : null;
+        })
+        .filter(id => id !== null);
+
+    if (notificationIds.length > 0) {
+        fetch('{% url "notifications:mark_read" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: 'notification_ids[]=' + notificationIds.join('&notification_ids[]=')
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            }
+        });
+    }
+}
+</script>
+{% endblock %}
+

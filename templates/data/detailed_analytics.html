@@ -1,0 +1,351 @@
+{% extends 'base.html' %}
+
+{% block title %}Detailed Analytics - EarthScape Climate Agency{% endblock %}
+
+{% block page_content %}
+<div style="margin-bottom: var(--spacing-2xl);">
+    <div class="d-flex justify-content-between align-items-center" style="flex-wrap: wrap; gap: var(--spacing-lg);">
+        <div>
+            <h1 style="margin-bottom: var(--spacing-sm);"><i class="fas fa-chart-line"></i> Detailed Analytics</h1>
+            <p class="text-muted" style="margin: 0;">Trends, predictions, and anomaly detection visualizations</p>
+        </div>
+        <div class="d-flex gap-md" style="flex-wrap: wrap;">
+            <a href="{% url 'data:analytics' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Analytics
+            </a>
+            <a href="{% url 'data:sources' %}" class="btn btn-outline-primary">
+                <i class="fas fa-database"></i> Data Sources
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Time Range Selector -->
+<div style="margin-bottom: var(--spacing-2xl);">
+    <div class="card">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center" style="flex-wrap: wrap; gap: var(--spacing-lg);">
+                <div>
+                    <h5 style="margin: 0 0 var(--spacing-xs) 0;"><i class="fas fa-calendar-alt"></i> Time Range</h5>
+                    <small class="text-muted" style="display: block; margin-top: var(--spacing-xs);">Select the time period for analysis</small>
+                </div>
+                <div class="d-flex gap-sm" role="group" style="flex-wrap: wrap;">
+                    {% for value, label in range_options %}
+                    <a href="?range={{ value }}" 
+                       class="btn {% if time_range == value %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                        {{ label }}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Summary Statistics -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--spacing-xl); margin-bottom: var(--spacing-2xl);">
+    <div class="card bg-primary text-white">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="card-title" style="margin-bottom: var(--spacing-sm); opacity: 0.9;">Total Predictions</h6>
+                    <h3 style="margin: 0; font-size: var(--font-size-3xl); font-weight: var(--font-weight-bold);">{{ total_predictions }}</h3>
+                </div>
+                <div class="align-self-center">
+                    <i class="fas fa-brain fa-2x" style="opacity: 0.8;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card bg-danger text-white">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="card-title" style="margin-bottom: var(--spacing-sm); opacity: 0.9;">Anomalies Detected</h6>
+                    <h3 style="margin: 0; font-size: var(--font-size-3xl); font-weight: var(--font-weight-bold);">{{ total_anomalies }}</h3>
+                </div>
+                <div class="align-self-center">
+                    <i class="fas fa-exclamation-triangle fa-2x" style="opacity: 0.8;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card bg-warning text-white">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="card-title" style="margin-bottom: var(--spacing-sm); opacity: 0.9;">Avg Anomaly Score</h6>
+                    <h3 style="margin: 0; font-size: var(--font-size-3xl); font-weight: var(--font-weight-bold);">{{ avg_anomaly_score }}</h3>
+                </div>
+                <div class="align-self-center">
+                    <i class="fas fa-chart-bar fa-2x" style="opacity: 0.8;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if has_data %}
+<!-- Temperature Trends and Predictions Graph -->
+<div style="margin-bottom: var(--spacing-2xl);">
+    <div class="card">
+        <div class="card-header">
+            <h5 style="margin: 0 0 var(--spacing-xs) 0;"><i class="fas fa-thermometer-half"></i> Temperature Trends & Predictions</h5>
+            <small class="text-muted" style="display: block; margin-top: var(--spacing-xs);">Actual temperature data vs AI model predictions</small>
+        </div>
+        <div class="card-body" style="padding-top: var(--spacing-lg);">
+            <canvas id="temperatureChart" height="80"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Anomalies Graph -->
+<div style="margin-bottom: var(--spacing-2xl);">
+    <div class="card">
+        <div class="card-header">
+            <h5 style="margin: 0 0 var(--spacing-xs) 0;"><i class="fas fa-exclamation-circle"></i> Anomaly Detection</h5>
+            <small class="text-muted" style="display: block; margin-top: var(--spacing-xs);">Anomaly scores over time - higher scores indicate potential anomalies</small>
+        </div>
+        <div class="card-body" style="padding-top: var(--spacing-lg);">
+            <canvas id="anomalyChart" height="80"></canvas>
+        </div>
+    </div>
+</div>
+{% else %}
+<!-- No Data Message -->
+<div>
+    <div class="card">
+        <div class="card-body text-center" style="padding: var(--spacing-3xl) var(--spacing-xl);">
+            <i class="fas fa-chart-line fa-4x text-muted" style="margin-bottom: var(--spacing-xl); opacity: 0.3;"></i>
+            <h4 class="text-muted" style="margin-bottom: var(--spacing-md);">No Data Available</h4>
+            <p class="text-muted" style="margin-bottom: var(--spacing-xl); max-width: 500px; margin-left: auto; margin-right: auto;">
+                No predictions or climate data found for the selected time range.
+                <br>Run climate analysis to generate predictions and anomaly detection.
+            </p>
+            <a href="{% url 'ai_models:ai_dashboard' %}" class="btn btn-primary">
+                <i class="fas fa-play"></i> Run Climate Analysis
+            </a>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_scripts %}
+{% if has_data %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<!-- Data for charts - stored as JSON to avoid linter errors -->
+<script type="application/json" id="chart-data">
+{
+    "tempTimestamps": {{ temp_timestamps|safe }},
+    "tempActual": {{ temp_actual|safe }},
+    "tempPredTimestamps": {{ temp_prediction_timestamps|safe }},
+    "tempPredictions": {{ temp_predictions|safe }},
+    "anomalyTimestamps": {{ anomaly_timestamps|safe }},
+    "anomalyScores": {{ anomaly_scores|safe }},
+    "anomalyFlags": {{ anomaly_flags|safe }}
+}
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Parse chart data from JSON script tag
+    const chartDataElement = document.getElementById('chart-data');
+    const chartData = JSON.parse(chartDataElement.textContent);
+    
+    // Format timestamps for display
+    function formatDate(isoString) {
+        const date = new Date(isoString);
+        return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    }
+
+    // Temperature Trends and Predictions Chart
+    const tempCtx = document.getElementById('temperatureChart');
+    if (tempCtx) {
+        const tempTimestamps = chartData.tempTimestamps;
+        const tempActual = chartData.tempActual;
+        const tempPredTimestamps = chartData.tempPredTimestamps;
+        const tempPredictions = chartData.tempPredictions;
+
+        // Combine all timestamps and sort
+        const allTimestamps = [...new Set([...tempTimestamps, ...tempPredTimestamps])].sort();
+        const allLabels = allTimestamps.map(formatDate);
+        
+        // Map actual temperatures to combined timestamps
+        const actualData = allTimestamps.map(ts => {
+            const idx = tempTimestamps.indexOf(ts);
+            return idx >= 0 ? tempActual[idx] : null;
+        });
+        
+        // Map predictions to combined timestamps
+        const predictionData = allTimestamps.map(ts => {
+            const idx = tempPredTimestamps.indexOf(ts);
+            return idx >= 0 ? tempPredictions[idx] : null;
+        });
+
+        const tempChart = new Chart(tempCtx.getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: allLabels,
+                datasets: [
+                    {
+                        label: 'Actual Temperature',
+                        data: actualData,
+                        borderColor: 'rgb(75, 192, 192)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        tension: 0.1,
+                        fill: false,
+                        spanGaps: true
+                    },
+                    {
+                        label: 'Predicted Temperature',
+                        data: predictionData,
+                        borderColor: 'rgb(255, 99, 132)',
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        borderDash: [5, 5],
+                        tension: 0.1,
+                        fill: false,
+                        spanGaps: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    title: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        title: {
+                            display: true,
+                            text: 'Temperature (°C)'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Time'
+                        },
+                        ticks: {
+                            maxTicksLimit: 10
+                        }
+                    }
+                },
+                interaction: {
+                    mode: 'nearest',
+                    axis: 'x',
+                    intersect: false
+                }
+            }
+        });
+    }
+
+    // Anomaly Detection Chart
+    const anomalyCtx = document.getElementById('anomalyChart');
+    if (anomalyCtx) {
+        const anomalyTimestamps = chartData.anomalyTimestamps;
+        const anomalyScores = chartData.anomalyScores;
+        const anomalyFlags = chartData.anomalyFlags;
+
+        // Check if we have data
+        if (anomalyTimestamps && anomalyTimestamps.length > 0 && anomalyScores && anomalyScores.length > 0) {
+            const anomalyChart = new Chart(anomalyCtx.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: anomalyTimestamps.map(formatDate),
+                    datasets: [
+                        {
+                            label: 'Anomaly Score',
+                            data: anomalyScores,
+                            borderColor: 'rgb(54, 162, 235)',
+                            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                            tension: 0.1,
+                            fill: true
+                        },
+                        {
+                            label: 'Anomalies Detected',
+                            data: anomalyScores.map((score, idx) => anomalyFlags[idx] ? score : null),
+                            borderColor: 'rgb(255, 99, 132)',
+                            backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                            pointRadius: 8,
+                            pointHoverRadius: 10,
+                            pointStyle: 'triangle',
+                            showLine: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    label += context.parsed.y.toFixed(3);
+                                    if (context.datasetIndex === 1 && context.parsed.y !== null) {
+                                        label += ' (Anomaly Detected)';
+                                    }
+                                    return label;
+                                }
+                            }
+                        },
+                        title: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Anomaly Score'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Time'
+                            },
+                            ticks: {
+                                maxTicksLimit: 10
+                            }
+                        }
+                    },
+                    interaction: {
+                        mode: 'nearest',
+                        axis: 'x',
+                        intersect: false
+                    }
+                }
+            });
+        } else {
+            // Show message if no data
+            anomalyCtx.parentElement.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--color-text-secondary);"><i class="fas fa-info-circle" style="font-size: 2rem; margin-bottom: 1rem; opacity: 0.5;"></i><p>No anomaly data available for the selected time range.</p></div>';
+        }
+    }
+});
+</script>
+{% endif %}
+{% endblock %}
+

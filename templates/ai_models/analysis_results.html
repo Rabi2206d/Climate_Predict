@@ -1,0 +1,202 @@
+{% extends 'base.html' %}
+
+{% block title %}Analysis Results - EarthScape Climate Agency{% endblock %}
+
+{% block page_content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1><i class="fas fa-check-circle text-success"></i> AI Analysis Completed</h1>
+            <a href="{% url 'ai_models:ai_dashboard' %}" class="btn btn-primary">
+                <i class="fas fa-arrow-left"></i> Back to AI Dashboard
+            </a>
+        </div>
+        <p class="text-muted">Climate analysis results from machine learning models</p>
+    </div>
+</div>
+
+<!-- Analysis Summary -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <h3>{{ total_data_points }}</h3>
+                <p class="mb-0">Data Points Analyzed</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <h3>{{ predictions_generated }}</h3>
+                <p class="mb-0">Predictions Generated</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body text-center">
+                <h3>{{ anomalies_detected }}</h3>
+                <p class="mb-0">Anomalies Detected</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <h3>{{ anomaly_threshold|floatformat:2 }}</h3>
+                <p class="mb-0">Anomaly Threshold</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Latest Predictions -->
+{% if latest_predictions %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-thermometer-half"></i> Latest Temperature Predictions</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Prediction Time</th>
+                                <th>Predicted Temperature</th>
+                                <th>Confidence Range</th>
+                                <th>Confidence Score</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for prediction in latest_predictions %}
+                            <tr>
+                                <td>{{ prediction.target_timestamp|date:"M d, H:i" }}</td>
+                                <td><strong>{{ prediction.prediction_value|floatformat:1 }}°C</strong></td>
+                                <td>
+                                    {{ prediction.prediction_range.lower|floatformat:1 }}°C -
+                                    {{ prediction.prediction_range.upper|floatformat:1 }}°C
+                                </td>
+                                <td>
+                                    {% if prediction.confidence_score %}
+                                        <span class="badge bg-success">{{ prediction.confidence_percentage }}%</span>
+                                    {% else %}
+                                        <span class="text-muted">N/A</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Anomalies Detected -->
+{% if recent_anomalies %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-warning">
+            <div class="card-header bg-warning">
+                <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Anomalies Detected</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <strong>{{ recent_anomalies|length }} climate anomalies</strong> were detected with scores above the threshold of {{ anomaly_threshold }}.
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Anomaly Score</th>
+                                <th>Temperature</th>
+                                <th>Humidity</th>
+                                <th>Severity</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for anomaly in recent_anomalies %}
+                            <tr>
+                                <td>{{ anomaly.target_timestamp|date:"M d, H:i:s" }}</td>
+                                <td>
+                                    <span class="badge bg-danger">{{ anomaly.prediction_value|floatformat:3 }}</span>
+                                </td>
+                                <td>
+                                    {% if anomaly.climate_data.temperature %}
+                                        {{ anomaly.climate_data.temperature|floatformat:1 }}°C
+                                    {% else %}
+                                        <span class="text-muted">N/A</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if anomaly.climate_data.humidity %}
+                                        {{ anomaly.climate_data.humidity|floatformat:1 }}%
+                                    {% else %}
+                                        <span class="text-muted">N/A</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if anomaly.prediction_value > 0.8 %}
+                                        <span class="badge bg-danger">Critical</span>
+                                    {% elif anomaly.prediction_value > 0.6 %}
+                                        <span class="badge bg-warning">High</span>
+                                    {% else %}
+                                        <span class="badge bg-info">Medium</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Next Steps -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-forward"></i> Next Steps</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <i class="fas fa-chart-line fa-3x text-primary mb-3"></i>
+                            <h6>View Analytics</h6>
+                            <p class="text-muted">Check detailed analytics and trends</p>
+                            <a href="{% url 'data:detailed_analytics' %}" class="btn btn-outline-primary btn-sm">View Analytics</a>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <i class="fas fa-history fa-3x text-info mb-3"></i>
+                            <h6>Prediction History</h6>
+                            <p class="text-muted">Review all AI predictions</p>
+                            <a href="{% url 'ai_models:predictions_history' %}" class="btn btn-outline-info btn-sm">View History</a>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <i class="fas fa-bell fa-3x text-warning mb-3"></i>
+                            <h6>Check Alerts</h6>
+                            <p class="text-muted">Review triggered alerts</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
