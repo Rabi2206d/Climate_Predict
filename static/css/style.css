@@ -4,53 +4,54 @@
 
 /* ===== CSS VARIABLES & DESIGN TOKENS ===== */
 :root {
-    /* Color Palette - Modern & Professional */
-    --color-primary: #3b82f6;
-    --color-primary-light: #60a5fa;
-    --color-primary-dark: #2563eb;
-    --color-primary-rgb: 59, 130, 246;
+    /* Color Palette - EarthScape Professional */
+    /* Deep Ocean Blue & Earth Green Theme */
+    --color-primary: #0ea5e9;       /* Sky Blue */
+    --color-primary-light: #38bdf8;
+    --color-primary-dark: #0284c7;
+    --color-primary-rgb: 14, 165, 233;
     
-    --color-secondary: #8b5cf6;
-    --color-secondary-light: #a78bfa;
-    --color-secondary-dark: #7c3aed;
+    --color-secondary: #0f172a;     /* Deep Slate */
+    --color-secondary-light: #334155;
+    --color-secondary-dark: #020617;
     
-    --color-success: #10b981;
+    --color-success: #10b981;       /* Emerald */
     --color-success-light: #34d399;
     --color-success-dark: #059669;
     
-    --color-warning: #f59e0b;
+    --color-warning: #f59e0b;       /* Amber */
     --color-warning-light: #fbbf24;
     --color-warning-dark: #d97706;
     
-    --color-danger: #ef4444;
+    --color-danger: #ef4444;        /* Red */
     --color-danger-light: #f87171;
     --color-danger-dark: #dc2626;
     
-    --color-info: #06b6d4;
-    --color-info-light: #22d3ee;
-    --color-info-dark: #0891b2;
+    --color-info: #6366f1;          /* Indigo */
+    --color-info-light: #818cf8;
+    --color-info-dark: #4f46e5;
     
-    /* Neutrals - Light Mode */
-    --color-gray-50: #f9fafb;
-    --color-gray-100: #f3f4f6;
-    --color-gray-200: #e5e7eb;
-    --color-gray-300: #d1d5db;
-    --color-gray-400: #9ca3af;
-    --color-gray-500: #6b7280;
-    --color-gray-600: #4b5563;
-    --color-gray-700: #374151;
-    --color-gray-800: #1f2937;
-    --color-gray-900: #111827;
+    /* Neutrals - Clean & Professional */
+    --color-gray-50: #f8fafc;
+    --color-gray-100: #f1f5f9;
+    --color-gray-200: #e2e8f0;
+    --color-gray-300: #cbd5e1;
+    --color-gray-400: #94a3b8;
+    --color-gray-500: #64748b;
+    --color-gray-600: #475569;
+    --color-gray-700: #334155;
+    --color-gray-800: #1e293b;
+    --color-gray-900: #0f172a;
     
     /* Semantic Colors */
     --color-bg-primary: #ffffff;
-    --color-bg-secondary: #f9fafb;
-    --color-bg-tertiary: #f3f4f6;
-    --color-text-primary: #111827;
-    --color-text-secondary: #6b7280;
-    --color-text-tertiary: #9ca3af;
-    --color-border: #e5e7eb;
-    --color-border-light: #f3f4f6;
+    --color-bg-secondary: #f8fafc;  /* Very light slate */
+    --color-bg-tertiary: #f1f5f9;
+    --color-text-primary: #0f172a;
+    --color-text-secondary: #475569;
+    --color-text-tertiary: #94a3b8;
+    --color-border: #e2e8f0;
+    --color-border-light: #f1f5f9;
     
     /* Typography Scale */
     --font-family-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;

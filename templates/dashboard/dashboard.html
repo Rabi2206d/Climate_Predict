@@ -1,411 +1,184 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Dashboard - EarthScape Climate Agency{% endblock %}
+{% block title %}Command Center - EarthScape{% endblock %}
 
 {% block page_content %}
-<!-- Page Header -->
-<div class="d-flex justify-content-between align-items-center mb-xl">
-    <div>
-        <h1 style="margin-bottom: var(--spacing-sm);">
-            <i class="fas fa-chart-pie text-primary"></i> Climate Dashboard
-        </h1>
-        <p class="text-secondary" style="margin: 0; font-size: var(--font-size-base);">
-            Real-time environmental monitoring and insights
-        </p>
-    </div>
-    <div class="d-flex gap-md">
-        <button class="btn btn-outline" onclick="window.location.reload()">
-            <i class="fas fa-sync-alt"></i> Refresh
-        </button>
-        <button class="btn btn-primary" onclick="window.location.href='{% url 'data:upload' %}'">
-            <i class="fas fa-cloud-upload-alt"></i> Upload Data
-        </button>
-    </div>
-</div>
+<div class="animate-fade-in">
+    <!-- Header Section -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem;">
+        <div>
+            <h1 style="font-size: 2.5rem; margin-bottom: 0.5rem;">
+                <span class="text-gradient-cyan">Command Center</span>
+            </h1>
+            <p style="color: var(--text-secondary);">Real-time planetary monitoring active</p>
+        </div>
 
-<!-- Key Metrics - Modern Stat Cards -->
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--spacing-lg); margin-bottom: var(--spacing-2xl);">
-    <!-- Total Data Points -->
-    <div class="stat-card primary">
-        <div class="stat-card-header">
-            <div class="stat-card-title">Total Data Points</div>
-            <div class="stat-card-icon">
-                <i class="fas fa-database"></i>
-            </div>
-        </div>
-        <div class="stat-card-value">
-            {{ stats.total_data_points|default:"0"|floatformat:0 }}
-        </div>
-        <div class="stat-card-footer">
-            {% if stats.data_growth_7d %}
-            <div class="stat-card-trend {% if stats.data_growth_7d > 0 %}up{% else %}down{% endif %}">
-                <i class="fas fa-arrow-{% if stats.data_growth_7d > 0 %}up{% else %}down{% endif %}"></i>
-                {{ stats.data_growth_7d|floatformat:1 }}%
-            </div>
-            <span>vs last 7 days</span>
-            {% else %}
-            <span>All time records</span>
-            {% endif %}
-        </div>
-    </div>
-
-    <!-- Active Sources -->
-    <div class="stat-card success">
-        <div class="stat-card-header">
-            <div class="stat-card-title">Active Sources</div>
-            <div class="stat-card-icon">
-                <i class="fas fa-satellite-dish"></i>
-            </div>
-        </div>
-        <div class="stat-card-value">{{ stats.active_sources|default:"0" }}</div>
-        <div class="stat-card-footer">
-            <i class="fas fa-check-circle"></i>
-            <span>Currently monitoring</span>
-        </div>
-    </div>
-
-    <!-- Recent Data (24h) -->
-    <div class="stat-card info">
-        <div class="stat-card-header">
-            <div class="stat-card-title">Recent Data (24h)</div>
-            <div class="stat-card-icon">
-                <i class="fas fa-clock"></i>
-            </div>
-        </div>
-        <div class="stat-card-value">{{ stats.recent_data_points|default:"0" }}</div>
-        <div class="stat-card-footer">
-            <i class="fas fa-calendar-day"></i>
-            <span>Last 24 hours</span>
-        </div>
-    </div>
-
-    <!-- Active Alerts -->
-    <div class="stat-card warning">
-        <div class="stat-card-header">
-            <div class="stat-card-title">Active Alerts</div>
-            <div class="stat-card-icon">
-                <i class="fas fa-exclamation-triangle"></i>
-            </div>
-        </div>
-        <div class="stat-card-value">{{ alert_summary.active_alerts|default:"0" }}</div>
-        <div class="stat-card-footer">
-            {% if alert_summary.active_alerts > 0 %}
-            <span class="badge-danger" style="padding: 4px 8px; border-radius: 12px;">Requires attention</span>
-            {% else %}
-            <span class="badge-success" style="padding: 4px 8px; border-radius: 12px;">All clear</span>
-            {% endif %}
-        </div>
-    </div>
-</div>
-
-<!-- Main Content Grid -->
-<div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-lg); margin-bottom: var(--spacing-2xl);">
-    <!-- Environmental Metrics Card -->
-    <div class="card">
-        <div class="card-header">
-            <h3 class="card-title">
-                <i class="fas fa-leaf"></i> Environmental Metrics
-            </h3>
-        </div>
-        <div class="card-body">
-            {% if env_metrics %}
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-xl);">
-                <!-- Temperature -->
-                <div style="text-align: center; padding: var(--spacing-lg); background: var(--color-bg-secondary); border-radius: var(--radius-lg);">
-                    <div style="font-size: var(--font-size-xs); color: var(--color-text-tertiary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: var(--spacing-sm);">
-                        Temperature
-                    </div>
-                    {% if env_metrics.temperature.current_avg %}
-                    <div style="font-size: var(--font-size-4xl); font-weight: 800; color: var(--color-primary); line-height: 1; margin-bottom: var(--spacing-sm);">
-                        {{ env_metrics.temperature.current_avg|floatformat:1 }}°C
-                    </div>
-                    <div style="font-size: var(--font-size-xs); color: var(--color-text-secondary);">
-                        Range: {{ env_metrics.temperature.min_24h|floatformat:1 }}° - {{ env_metrics.temperature.max_24h|floatformat:1 }}°
-                    </div>
-                    {% else %}
-                    <div style="font-size: var(--font-size-2xl); color: var(--color-text-tertiary);">N/A</div>
-                    {% endif %}
-                </div>
-
-                <!-- Humidity -->
-                <div style="text-align: center; padding: var(--spacing-lg); background: var(--color-bg-secondary); border-radius: var(--radius-lg);">
-                    <div style="font-size: var(--font-size-xs); color: var(--color-text-tertiary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: var(--spacing-sm);">
-                        Humidity
-                    </div>
-                    {% if env_metrics.humidity.current_avg %}
-                    <div style="font-size: var(--font-size-4xl); font-weight: 800; color: var(--color-success); line-height: 1; margin-bottom: var(--spacing-sm);">
-                        {{ env_metrics.humidity.current_avg|floatformat:1 }}%
-                    </div>
-                    <div style="font-size: var(--font-size-xs); color: var(--color-text-secondary);">
-                        7d avg: {{ env_metrics.humidity.avg_7d|floatformat:1 }}%
-                    </div>
-                    {% else %}
-                    <div style="font-size: var(--font-size-2xl); color: var(--color-text-tertiary);">N/A</div>
-                    {% endif %}
-                </div>
-
-                <!-- Air Quality -->
-                <div style="text-align: center; padding: var(--spacing-lg); background: var(--color-bg-secondary); border-radius: var(--radius-lg);">
-                    <div style="font-size: var(--font-size-xs); color: var(--color-text-tertiary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: var(--spacing-sm);">
-                        Air Quality (PM2.5)
-                    </div>
-                    {% if env_metrics.air_quality.avg_pm25 %}
-                    <div style="font-size: var(--font-size-4xl); font-weight: 800; color: var(--color-warning); line-height: 1; margin-bottom: var(--spacing-sm);">
-                        {{ env_metrics.air_quality.avg_pm25|floatformat:1 }}
-                    </div>
-                    <div style="font-size: var(--font-size-xs); color: var(--color-text-secondary);">
-                        PM10: {{ env_metrics.air_quality.avg_pm10|floatformat:1 }}
-                    </div>
-                    {% else %}
-                    <div style="font-size: var(--font-size-2xl); color: var(--color-text-tertiary);">N/A</div>
-                    {% endif %}
-                </div>
-
-                <!-- Wind Speed -->
-                <div style="text-align: center; padding: var(--spacing-lg); background: var(--color-bg-secondary); border-radius: var(--radius-lg);">
-                    <div style="font-size: var(--font-size-xs); color: var(--color-text-tertiary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: var(--spacing-sm);">
-                        Wind Speed
-                    </div>
-                    {% if env_metrics.weather.avg_wind_speed %}
-                    <div style="font-size: var(--font-size-4xl); font-weight: 800; color: var(--color-info); line-height: 1; margin-bottom: var(--spacing-sm);">
-                        {{ env_metrics.weather.avg_wind_speed|floatformat:1 }}
-                    </div>
-                    <div style="font-size: var(--font-size-xs); color: var(--color-text-secondary);">
-                        m/s
-                    </div>
-                    {% else %}
-                    <div style="font-size: var(--font-size-2xl); color: var(--color-text-tertiary);">N/A</div>
-                    {% endif %}
-                </div>
-            </div>
-            {% else %}
-            <div style="text-align: center; padding: var(--spacing-2xl); color: var(--color-text-tertiary);">
-                <i class="fas fa-leaf" style="font-size: 3rem; margin-bottom: var(--spacing-lg); opacity: 0.3;"></i>
-                <p>No environmental metrics available yet.</p>
-                <button class="btn btn-primary btn-sm" onclick="window.location.href='{% url 'data:upload' %}'">
-                    <i class="fas fa-upload"></i> Upload Data
-                </button>
-            </div>
-            {% endif %}
-        </div>
-    </div>
-
-    <!-- Recent Activity Card -->
-    <div class="card">
-        <div class="card-header">
-            <h3 class="card-title">
-                <i class="fas fa-activity"></i> Recent Activity (24h)
-            </h3>
-        </div>
-        <div class="card-body">
-            {% if recent_activity %}
-            <div style="display: flex; flex-direction: column; gap: var(--spacing-md);">
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: var(--spacing-md); background: var(--color-bg-secondary); border-radius: var(--radius-md);">
-                    <div style="display: flex; align-items: center; gap: var(--spacing-md);">
-                        <div style="width: 40px; height: 40px; background: linear-gradient(135deg, var(--color-primary), var(--color-secondary)); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; color: white;">
-                            <i class="fas fa-database"></i>
-                        </div>
-                        <div>
-                            <div style="font-weight: 600; color: var(--color-text-primary);">Data Processed</div>
-                            <div style="font-size: var(--font-size-sm); color: var(--color-text-tertiary);">Total records ingested</div>
-                        </div>
-                    </div>
-                    <div class="badge-primary" style="font-size: var(--font-size-lg); padding: var(--spacing-sm) var(--spacing-lg);">
-                        {{ recent_activity.data_processed }}
-                    </div>
-                </div>
-
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: var(--spacing-md); background: var(--color-bg-secondary); border-radius: var(--radius-md);">
-                    <div style="display: flex; align-items: center; gap: var(--spacing-md);">
-                        <div style="width: 40px; height: 40px; background: linear-gradient(135deg, var(--color-success), var(--color-success-light)); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; color: white;">
-                            <i class="fas fa-satellite"></i>
-                        </div>
-                        <div>
-                            <div style="font-weight: 600; color: var(--color-text-primary);">New Sources</div>
-                            <div style="font-size: var(--font-size-sm); color: var(--color-text-tertiary);">Recently added</div>
-                        </div>
-                    </div>
-                    <div class="badge-success" style="font-size: var(--font-size-lg); padding: var(--spacing-sm) var(--spacing-lg);">
-                        {{ recent_activity.new_sources }}
-                    </div>
-                </div>
-
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: var(--spacing-md); background: var(--color-bg-secondary); border-radius: var(--radius-md);">
-                    <div style="display: flex; align-items: center; gap: var(--spacing-md);">
-                        <div style="width: 40px; height: 40px; background: linear-gradient(135deg, var(--color-warning), var(--color-warning-light)); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; color: white;">
-                            <i class="fas fa-exclamation-triangle"></i>
-                        </div>
-                        <div>
-                            <div style="font-weight: 600; color: var(--color-text-primary);">Alerts Generated</div>
-                            <div style="font-size: var(--font-size-sm); color: var(--color-text-tertiary);">Threshold violations</div>
-                        </div>
-                    </div>
-                    <div class="badge-warning" style="font-size: var(--font-size-lg); padding: var(--spacing-sm) var(--spacing-lg);">
-                        {{ recent_activity.alerts_generated }}
-                    </div>
-                </div>
-
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: var(--spacing-md); background: var(--color-bg-secondary); border-radius: var(--radius-md);">
-                    <div style="display: flex; align-items: center; gap: var(--spacing-md);">
-                        <div style="width: 40px; height: 40px; background: linear-gradient(135deg, var(--color-danger), var(--color-danger-light)); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; color: white;">
-                            <i class="fas fa-bell"></i>
-                        </div>
-                        <div>
-                            <div style="font-weight: 600; color: var(--color-text-primary);">Unread Notifications</div>
-                            <div style="font-size: var(--font-size-sm); color: var(--color-text-tertiary);">Pending review</div>
-                        </div>
-                    </div>
-                    <div class="badge-danger" style="font-size: var(--font-size-lg); padding: var(--spacing-sm) var(--spacing-lg);">
-                        {{ alert_summary.unread_notifications }}
-                    </div>
-                </div>
-            </div>
-            {% else %}
-            <div style="text-align: center; padding: var(--spacing-2xl); color: var(--color-text-tertiary);">
-                <i class="fas fa-chart-line" style="font-size: 3rem; margin-bottom: var(--spacing-lg); opacity: 0.3;"></i>
-                <p>No recent activity to display.</p>
-            </div>
-            {% endif %}
-        </div>
-    </div>
-</div>
-
-<!-- Data Sources & Temperature Readings -->
-<div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-lg); margin-bottom: var(--spacing-2xl);">
-    <!-- Data Sources -->
-    <div class="card">
-        <div class="card-header">
-            <h3 class="card-title">
-                <i class="fas fa-satellite"></i> Data Sources
-            </h3>
-        </div>
-        <div class="card-body" style="padding: 0;">
-            {% if data_sources %}
-            <div class="table-wrapper" style="border: none; box-shadow: none;">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Source</th>
-                            <th>Type</th>
-                            <th>Records</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for source in data_sources %}
-                        <tr>
-                            <td>
-                                <div style="font-weight: 600; color: var(--color-text-primary);">{{ source.name }}</div>
-                            </td>
-                            <td>
-                                <span class="badge-info">{{ source.get_source_type_display }}</span>
-                            </td>
-                            <td>
-                                <span style="font-weight: 600;">{{ source.data_count|default:"0" }}</span>
-                            </td>
-                            <td>
-                                {% if source.is_active %}
-                                <span class="badge-success">
-                                    <i class="fas fa-circle" style="font-size: 6px;"></i> Active
-                                </span>
-                                {% else %}
-                                <span class="badge-secondary">
-                                    <i class="fas fa-circle" style="font-size: 6px;"></i> Inactive
-                                </span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            {% else %}
-            <div style="text-align: center; padding: var(--spacing-2xl); color: var(--color-text-tertiary);">
-                <i class="fas fa-database" style="font-size: 3rem; margin-bottom: var(--spacing-lg); opacity: 0.3;"></i>
-                <p>No data sources configured yet.</p>
-                <button class="btn btn-primary btn-sm" onclick="window.location.href='{% url 'data:sources' %}'">
-                    <i class="fas fa-plus"></i> Add Data Source
-                </button>
-            </div>
-            {% endif %}
-        </div>
-    </div>
-
-    <!-- Recent Temperature Readings -->
-    <div class="card">
-        <div class="card-header">
-            <h3 class="card-title">
-                <i class="fas fa-thermometer-half"></i> Recent Temperature
-            </h3>
-        </div>
-        <div class="card-body" style="padding: 0;">
-            {% if latest_temperature %}
-            <div class="table-wrapper" style="border: none; box-shadow: none;">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Source</th>
-                            <th>Temperature</th>
-                            <th>Timestamp</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for reading in latest_temperature %}
-                        <tr>
-                            <td>
-                                <div style="font-weight: 600; color: var(--color-text-primary);">{{ reading.data_source.name }}</div>
-                                <div style="font-size: var(--font-size-xs); color: var(--color-text-tertiary);">{{ reading.data_source.get_source_type_display }}</div>
-                            </td>
-                            <td>
-                                <span class="badge-info" style="font-size: var(--font-size-sm); padding: var(--spacing-sm) var(--spacing-md);">
-                                    {{ reading.temperature|floatformat:1 }}°C
-                                </span>
-                            </td>
-                            <td>
-                                <span style="font-size: var(--font-size-sm); color: var(--color-text-secondary);">
-                                    {{ reading.timestamp|date:"M d, H:i" }}
-                                </span>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            {% else %}
-            <div style="text-align: center; padding: var(--spacing-2xl); color: var(--color-text-tertiary);">
-                <i class="fas fa-thermometer-half" style="font-size: 3rem; margin-bottom: var(--spacing-lg); opacity: 0.3;"></i>
-                <p>No temperature data available.</p>
-                <button class="btn btn-primary btn-sm" onclick="window.location.href='{% url 'data:upload' %}'">
-                    <i class="fas fa-upload"></i> Upload Data
-                </button>
-            </div>
-            {% endif %}
-        </div>
-    </div>
-</div>
-
-<!-- Quick Actions -->
-<div class="card">
-    <div class="card-header">
-        <h3 class="card-title">
-            <i class="fas fa-bolt"></i> Quick Actions
-        </h3>
-    </div>
-    <div class="card-body">
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--spacing-lg);">
-            <button class="btn btn-primary" style="padding: var(--spacing-lg);" onclick="window.location.href='{% url 'data:upload' %}'">
-                <i class="fas fa-cloud-upload-alt" style="font-size: 1.5rem; margin-bottom: var(--spacing-sm);"></i>
-                <div>Upload Climate Data</div>
+        <div style="display: flex; gap: 1rem;">
+            <button class="btn-glass" onclick="window.location.reload()">
+                <i class="fas fa-sync-alt rotate-hover"></i> SYNC
             </button>
-            <button class="btn btn-success" style="padding: var(--spacing-lg);" onclick="window.location.href='{% url 'data:sources' %}'">
-                <i class="fas fa-plus-circle" style="font-size: 1.5rem; margin-bottom: var(--spacing-sm);"></i>
-                <div>Add Data Source</div>
-            </button>
-            <button class="btn btn-info" style="padding: var(--spacing-lg);" onclick="window.location.href='{% url 'data:detailed_analytics' %}'">
-                <i class="fas fa-chart-bar" style="font-size: 1.5rem; margin-bottom: var(--spacing-sm);"></i>
-                <div>View Analytics</div>
-            </button>
+            <a href="{% url 'data:upload' %}" class="btn-neon">
+                <i class="fas fa-plus"></i> Ingest Data
+            </a>
+        </div>
+    </div>
+
+    <!-- Bento Grid Layout -->
+    <div class="bento-grid">
+        <!-- Main KPI: Total Data -->
+        <div class="glass-panel stat-card-v2" style="grid-column: span 2;">
+            <div class="stat-label">Global Data Points</div>
+            <div class="stat-value text-gradient-cyan">{{ stats.total_data_points|default:"0"|floatformat:0 }}</div>
+            <div style="margin-top: 1rem; display: flex; align-items: center; gap: 0.5rem; color: var(--neon-emerald);">
+                <i class="fas fa-arrow-up"></i>
+                <span>{{ stats.data_growth_7d|floatformat:1 }}% vs last cycle</span>
+            </div>
+            <!-- Background Decoration -->
+            <i class="fas fa-globe-americas"
+                style="position: absolute; right: -20px; bottom: -20px; font-size: 10rem; opacity: 0.05; color: var(--neon-cyan);"></i>
+        </div>
+
+        <!-- KPI: Active Sources -->
+        <div class="glass-panel stat-card-v2">
+            <div class="stat-label">Active Arrays</div>
+            <div class="stat-value text-gradient-purple">{{ stats.active_sources|default:"0" }}</div>
+            <div style="margin-top: 0.5rem; font-size: 0.8rem; color: var(--text-muted);">
+                Monitoring Stations
+            </div>
+            <div style="position: absolute; top: 1rem; right: 1rem;">
+                <div
+                    style="width: 10px; height: 10px; background: var(--neon-emerald); border-radius: 50%; box-shadow: 0 0 10px var(--neon-emerald);">
+                </div>
+            </div>
+        </div>
+
+        <!-- KPI: Alerts -->
+        <div class="glass-panel stat-card-v2">
+            <div class="stat-label">Critical Events</div>
+            <div class="stat-value" style="color: var(--neon-rose);">{{ alert_summary.active_alerts|default:"0" }}</div>
+            <div style="margin-top: 0.5rem; font-size: 0.8rem; color: var(--text-muted);">
+                Requires Attention
+            </div>
+        </div>
+
+        <!-- Chart Section: Environmental Trends -->
+        <div class="glass-panel" style="grid-column: 1 / -1; padding: 1.5rem; min-height: 400px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 1.5rem;">
+                <h3 style="font-size: 1.2rem;">Environmental Telemetry</h3>
+                <div style="display: flex; gap: 0.5rem;">
+                    <span
+                        style="font-size: 0.8rem; padding: 0.2rem 0.8rem; background: rgba(255,255,255,0.1); border-radius: var(--radius-pill);">Temperature</span>
+                    <span
+                        style="font-size: 0.8rem; padding: 0.2rem 0.8rem; background: rgba(255,255,255,0.05); border-radius: var(--radius-pill); color: var(--text-secondary);">Humidity</span>
+                </div>
+            </div>
+            <canvas id="mainChart" height="100"></canvas>
+        </div>
+
+        <!-- Recent Activity Feed -->
+        <div class="glass-panel" style="grid-column: span 2; padding: 1.5rem;">
+            <h3 style="font-size: 1.2rem; margin-bottom: 1rem;">System Logs</h3>
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                {% if recent_activity %}
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <i class="fas fa-database" style="color: var(--neon-cyan);"></i>
+                        <div>
+                            <div style="font-weight: 600;">Data Ingestion</div>
+                            <div style="font-size: 0.8rem; color: var(--text-secondary);">Processed {{
+                                recent_activity.data_processed }} records</div>
+                        </div>
+                    </div>
+                    <span style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted);">24h</span>
+                </div>
+
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <i class="fas fa-exclamation-triangle" style="color: var(--neon-rose);"></i>
+                        <div>
+                            <div style="font-weight: 600;">Threshold Alerts</div>
+                            <div style="font-size: 0.8rem; color: var(--text-secondary);">{{
+                                recent_activity.alerts_generated }} anomalies detected</div>
+                        </div>
+                    </div>
+                    <span style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted);">24h</span>
+                </div>
+                {% else %}
+                <div style="text-align: center; color: var(--text-muted); padding: 2rem;">No recent system activity
+                    logged.</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Quick Actions Grid -->
+        <div class="glass-panel" style="padding: 1.5rem;">
+            <h3 style="font-size: 1.2rem; margin-bottom: 1rem;">Protocols</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <a href="{% url 'ai_models:ai_dashboard' %}" class="btn-glass"
+                    style="text-align: center; padding: 1.5rem 0.5rem;">
+                    <i class="fas fa-brain"
+                        style="font-size: 1.5rem; margin-bottom: 0.5rem; color: var(--neon-purple);"></i>
+                    <div style="font-size: 0.8rem;">Run AI Analysis</div>
+                </a>
+                <a href="{% url 'data:sources' %}" class="btn-glass"
+                    style="text-align: center; padding: 1.5rem 0.5rem;">
+                    <i class="fas fa-satellite-dish"
+                        style="font-size: 1.5rem; margin-bottom: 0.5rem; color: var(--neon-emerald);"></i>
+                    <div style="font-size: 0.8rem;">Manage Sources</div>
+                </a>
+            </div>
         </div>
     </div>
 </div>
+
+<!-- Chart Initialization -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const ctx = document.getElementById('mainChart').getContext('2d');
+
+        // Create Gradient
+        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, 'rgba(6, 182, 212, 0.5)');
+        gradient.addColorStop(1, 'rgba(6, 182, 212, 0)');
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00'],
+                datasets: [{
+                    label: 'Global Temperature (°C)',
+                    data: [14.2, 13.8, 15.1, 19.5, 18.2, 16.4], // Placeholder data
+                    borderColor: '#06b6d4',
+                    backgroundColor: gradient,
+                    borderWidth: 2,
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: '#0f172a',
+                    pointBorderColor: '#06b6d4',
+                    pointBorderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                        ticks: { color: '#94a3b8' }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: '#94a3b8' }
+                    }
+                }
+            }
+        });
+    });
+</script>
 {% endblock %}

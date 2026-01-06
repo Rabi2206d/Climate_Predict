@@ -1,23 +1,88 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Sign In - EarthScape Climate Agency{% endblock %}
+{% block title %}Login - EarthScape{% endblock %}
 
-{% block extra_head %}
+{% block page_content %}
+<div class="auth-container">
+    <!-- Visual Side -->
+    <div class="auth-visual">
+        <div style="position: absolute; text-align: center; z-index: 10;">
+            <h1 class="text-gradient-cyan" style="font-size: 4rem; font-weight: 800; margin-bottom: 1rem;">EARTHSCAPE
+            </h1>
+            <p style="color: rgba(255,255,255,0.7); font-size: 1.2rem; max-width: 400px; margin: 0 auto;">
+                Next-generation climate intelligence powered by deep learning.
+            </p>
+        </div>
+    </div>
+
+    <!-- Form Side -->
+    <div class="auth-form-side">
+        <div class="auth-box glass-panel animate-slide-up">
+            <h2 style="font-size: 2rem; margin-bottom: 0.5rem;">Welcome Back</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 2rem;">Access your command center</p>
+
+            <form method="POST" action="{% url 'authentication:login' %}">
+                {% csrf_token %}
+
+                <div class="input-group">
+                    <input type="text" name="username" class="form-control" placeholder="Username" required>
+                </div>
+
+                <div class="input-group">
+                    <input type="password" name="password" class="form-control" placeholder="Password" required>
+                </div>
+
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; font-size: 0.9rem;">
+                    <label
+                        style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-secondary); cursor: pointer;">
+                        <input type="checkbox" style="accent-color: var(--neon-cyan);"> Remember me
+                    </label>
+                    <a href="#" style="color: var(--neon-cyan);">Forgot Password?</a>
+                </div>
+
+                <button type="submit" class="btn-neon"
+                    style="width: 100%; justify-content: center; backdrop-filter: blur(5px);">
+                    Initialize Session
+                </button>
+            </form>
+
+            <div style="margin-top: 2rem; text-align: center; color: var(--text-secondary); font-size: 0.9rem;">
+                New to the agency? <a href="{% url 'authentication:register' %}"
+                    style="color: var(--neon-purple); font-weight: 600;">Request Access</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
 <style>
     /* Hide sidebar and topbar for login page */
-    .sidebar, .topbar { display: none !important; }
-    .main-wrapper { display: block !important; }
-    .main-content { margin-left: 0 !important; }
-    .content-wrapper { padding: 0 !important; max-width: none !important; }
-    
+    .sidebar,
+    .topbar {
+        display: none !important;
+    }
+
+    .main-wrapper {
+        display: block !important;
+    }
+
+    .main-content {
+        margin-left: 0 !important;
+    }
+
+    .content-wrapper {
+        padding: 0 !important;
+        max-width: none !important;
+    }
+
     body {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
         min-height: 100vh;
         overflow: hidden;
         position: relative;
     }
-    
+
     /* Animated Background Particles */
     body::before {
         content: '';
@@ -26,19 +91,29 @@
         height: 200%;
         top: -50%;
         left: -50%;
-        background-image: 
+        background-image:
             radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
             radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
             radial-gradient(circle at 40% 20%, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
         animation: float 20s ease-in-out infinite;
     }
-    
+
     @keyframes float {
-        0%, 100% { transform: translate(0, 0) rotate(0deg); }
-        33% { transform: translate(30px, -30px) rotate(120deg); }
-        66% { transform: translate(-20px, 20px) rotate(240deg); }
+
+        0%,
+        100% {
+            transform: translate(0, 0) rotate(0deg);
+        }
+
+        33% {
+            transform: translate(30px, -30px) rotate(120deg);
+        }
+
+        66% {
+            transform: translate(-20px, 20px) rotate(240deg);
+        }
     }
-    
+
     .login-wrapper {
         position: relative;
         z-index: 1;
@@ -48,24 +123,25 @@
         justify-content: center;
         padding: var(--spacing-2xl);
     }
-    
+
     .login-container {
         width: 100%;
         max-width: 480px;
         animation: fadeInUp 0.6s ease-out;
     }
-    
+
     @keyframes fadeInUp {
         from {
             opacity: 0;
             transform: translateY(30px);
         }
+
         to {
             opacity: 1;
             transform: translateY(0);
         }
     }
-    
+
     .login-card {
         background: rgba(255, 255, 255, 0.95);
         backdrop-filter: blur(20px);
@@ -76,12 +152,12 @@
         position: relative;
         overflow: hidden;
     }
-    
+
     [data-theme="dark"] .login-card {
         background: rgba(15, 23, 42, 0.95);
         border-color: rgba(255, 255, 255, 0.1);
     }
-    
+
     .login-card::before {
         content: '';
         position: absolute;
@@ -91,12 +167,12 @@
         height: 4px;
         background: linear-gradient(90deg, #667eea, #764ba2, #f093fb);
     }
-    
+
     .login-header {
         text-align: center;
         margin-bottom: var(--spacing-2xl);
     }
-    
+
     .login-logo {
         width: 80px;
         height: 80px;
@@ -111,12 +187,21 @@
         box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
         animation: pulse 2s ease-in-out infinite;
     }
-    
+
     @keyframes pulse {
-        0%, 100% { transform: scale(1); box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4); }
-        50% { transform: scale(1.05); box-shadow: 0 15px 40px rgba(102, 126, 234, 0.6); }
+
+        0%,
+        100% {
+            transform: scale(1);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        50% {
+            transform: scale(1.05);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.6);
+        }
     }
-    
+
     .login-title {
         font-size: var(--font-size-3xl);
         font-weight: var(--font-weight-extrabold);
@@ -127,22 +212,22 @@
         -webkit-text-fill-color: transparent;
         background-clip: text;
     }
-    
+
     .login-subtitle {
         font-size: var(--font-size-base);
         color: var(--color-text-secondary);
         font-weight: var(--font-weight-medium);
     }
-    
+
     .login-form {
         margin-bottom: var(--spacing-xl);
     }
-    
+
     .form-floating {
         position: relative;
         margin-bottom: var(--spacing-lg);
     }
-    
+
     .form-floating input {
         width: 100%;
         padding: var(--spacing-lg) var(--spacing-lg) var(--spacing-md);
@@ -153,17 +238,17 @@
         font-size: var(--font-size-base);
         transition: all var(--transition-base);
     }
-    
+
     .form-floating input:focus {
         outline: none;
         border-color: #667eea;
         box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
     }
-    
-    .form-floating input:focus + label,
-    .form-floating input:not(:placeholder-shown) + label,
-    .form-floating input.has-value + label,
-    .form-floating input:valid + label {
+
+    .form-floating input:focus+label,
+    .form-floating input:not(:placeholder-shown)+label,
+    .form-floating input.has-value+label,
+    .form-floating input:valid+label {
         transform: translateY(-120%) scale(0.85);
         top: 0;
         background: var(--color-bg-primary);
@@ -171,7 +256,7 @@
         color: #667eea;
         left: calc(var(--spacing-lg) - var(--spacing-sm));
     }
-    
+
     .form-floating label {
         position: absolute;
         left: var(--spacing-lg);
@@ -184,7 +269,7 @@
         z-index: 1;
         white-space: nowrap;
     }
-    
+
     .form-floating .input-icon {
         position: absolute;
         right: var(--spacing-lg);
@@ -193,7 +278,7 @@
         color: var(--color-text-tertiary);
         pointer-events: none;
     }
-    
+
     .password-toggle {
         position: absolute;
         right: var(--spacing-lg);
@@ -206,11 +291,11 @@
         padding: var(--spacing-sm);
         transition: color var(--transition-fast);
     }
-    
+
     .password-toggle:hover {
         color: var(--color-text-primary);
     }
-    
+
     .remember-forgot {
         display: flex;
         justify-content: space-between;
@@ -218,7 +303,7 @@
         margin-bottom: var(--spacing-xl);
         font-size: var(--font-size-sm);
     }
-    
+
     .remember-me {
         display: flex;
         align-items: center;
@@ -226,26 +311,26 @@
         cursor: pointer;
         color: var(--color-text-secondary);
     }
-    
+
     .remember-me input[type="checkbox"] {
         width: 18px;
         height: 18px;
         cursor: pointer;
         accent-color: #667eea;
     }
-    
+
     .forgot-link {
         color: #667eea;
         text-decoration: none;
         font-weight: var(--font-weight-semibold);
         transition: color var(--transition-fast);
     }
-    
+
     .forgot-link:hover {
         color: #764ba2;
         text-decoration: underline;
     }
-    
+
     .login-btn {
         width: 100%;
         padding: var(--spacing-lg);
@@ -262,16 +347,16 @@
         justify-content: center;
         gap: var(--spacing-sm);
     }
-    
+
     .login-btn:hover {
         transform: translateY(-2px);
         box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
     }
-    
+
     .login-btn:active {
         transform: translateY(0);
     }
-    
+
     .login-footer {
         text-align: center;
         padding-top: var(--spacing-xl);
@@ -279,14 +364,14 @@
         color: var(--color-text-tertiary);
         font-size: var(--font-size-sm);
     }
-    
+
     .features {
         margin-top: var(--spacing-2xl);
         display: grid;
         grid-template-columns: repeat(3, 1fr);
         gap: var(--spacing-lg);
     }
-    
+
     .feature-item {
         text-align: center;
         padding: var(--spacing-lg);
@@ -295,12 +380,12 @@
         border-radius: var(--radius-lg);
         border: 1px solid rgba(255, 255, 255, 0.3);
     }
-    
+
     [data-theme="dark"] .feature-item {
         background: rgba(15, 23, 42, 0.5);
         border-color: rgba(255, 255, 255, 0.1);
     }
-    
+
     .feature-icon {
         font-size: var(--font-size-2xl);
         margin-bottom: var(--spacing-sm);
@@ -309,18 +394,18 @@
         -webkit-text-fill-color: transparent;
         background-clip: text;
     }
-    
+
     .feature-text {
         font-size: var(--font-size-xs);
         color: var(--color-text-secondary);
         font-weight: var(--font-weight-medium);
     }
-    
+
     @media (max-width: 768px) {
         .login-card {
             padding: var(--spacing-2xl);
         }
-        
+
         .features {
             grid-template-columns: 1fr;
         }
@@ -344,15 +429,10 @@
             <!-- Login Form -->
             <form method="post" class="login-form" id="loginForm">
                 {% csrf_token %}
-                
+
                 <div class="form-floating">
-                    <input type="text" 
-                           id="username" 
-                           name="username" 
-                           placeholder=" " 
-                           required 
-                           autofocus
-                           autocomplete="username">
+                    <input type="text" id="username" name="username" placeholder=" " required autofocus
+                        autocomplete="username">
                     <label for="username">Username</label>
                     <span class="input-icon">
                         <i class="fas fa-user"></i>
@@ -360,12 +440,8 @@
                 </div>
 
                 <div class="form-floating">
-                    <input type="password" 
-                           id="password" 
-                           name="password" 
-                           placeholder=" " 
-                           required
-                           autocomplete="current-password">
+                    <input type="password" id="password" name="password" placeholder=" " required
+                        autocomplete="current-password">
                     <label for="password">Password</label>
                     <button type="button" class="password-toggle" onclick="togglePassword()">
                         <i class="fas fa-eye" id="passwordIcon"></i>
@@ -387,6 +463,7 @@
             </form>
 
             <div class="login-footer">
+                <p>Don't have an account? <a href="{% url 'authentication:register' %}">Sign up now</a></p>
                 <p>&copy; {{ "now"|date:"Y" }} EarthScape Climate Agency. All rights reserved.</p>
             </div>
         </div>
@@ -419,7 +496,7 @@
     function togglePassword() {
         const passwordInput = document.getElementById('password');
         const passwordIcon = document.getElementById('passwordIcon');
-        
+
         if (passwordInput.type === 'password') {
             passwordInput.type = 'text';
             passwordIcon.classList.remove('fa-eye');
@@ -430,7 +507,7 @@
             passwordIcon.classList.add('fa-eye');
         }
     }
-    
+
     // Handle floating labels for form inputs
     function handleFloatingLabel(input) {
         if (input.value && input.value.trim() !== '') {
@@ -439,37 +516,37 @@
             input.classList.remove('has-value');
         }
     }
-    
+
     // Initialize floating labels on page load
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         const usernameInput = document.getElementById('username');
         const passwordInput = document.getElementById('password');
-        
+
         // Check initial values
         handleFloatingLabel(usernameInput);
         handleFloatingLabel(passwordInput);
-        
+
         // Add event listeners for input changes
-        usernameInput.addEventListener('input', function() {
+        usernameInput.addEventListener('input', function () {
             handleFloatingLabel(this);
         });
-        
-        passwordInput.addEventListener('input', function() {
+
+        passwordInput.addEventListener('input', function () {
             handleFloatingLabel(this);
         });
-        
+
         // Also handle on focus/blur for better UX
-        usernameInput.addEventListener('focus', function() {
+        usernameInput.addEventListener('focus', function () {
             handleFloatingLabel(this);
         });
-        
-        passwordInput.addEventListener('focus', function() {
+
+        passwordInput.addEventListener('focus', function () {
             handleFloatingLabel(this);
         });
     });
-    
+
     // Form submission animation
-    document.getElementById('loginForm').addEventListener('submit', function(e) {
+    document.getElementById('loginForm').addEventListener('submit', function (e) {
         const btn = this.querySelector('.login-btn');
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Signing in...</span>';
         btn.disabled = true;

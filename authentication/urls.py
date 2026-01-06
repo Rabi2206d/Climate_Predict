@@ -4,6 +4,7 @@ from .controllers import AuthenticationController
 app_name = 'authentication'
 
 urlpatterns = [
+    path('register/', AuthenticationController.register_view, name='register'),
     path('login/', AuthenticationController.login_view, name='login'),
     path('logout/', AuthenticationController.logout_view, name='logout'),
     path('profile/', AuthenticationController.profile_view, name='profile'),

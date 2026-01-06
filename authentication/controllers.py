@@ -34,6 +34,48 @@ class AuthenticationController:
         return render(request, 'authentication/login.html')
 
     @staticmethod
+    @csrf_protect
+    def register_view(request):
+        """Handle user registration"""
+        if request.user.is_authenticated:
+            return redirect('dashboard:dashboard')
+
+        if request.method == 'POST':
+            username = request.POST.get('username')
+            email = request.POST.get('email')
+            password = request.POST.get('password')
+            confirm_password = request.POST.get('confirm_password')
+            
+            # Basic validation
+            if password != confirm_password:
+                messages.error(request, 'Passwords do not match.')
+                return render(request, 'authentication/register.html')
+            
+            if User.objects.filter(username=username).exists():
+                messages.error(request, 'Username already exists.')
+                return render(request, 'authentication/register.html')
+                
+            if User.objects.filter(email=email).exists():
+                messages.error(request, 'Email already registered.')
+                return render(request, 'authentication/register.html')
+            
+            try:
+                # Create user with default role VIEWER or ANALYST
+                user = User.objects.create_user(
+                    username=username,
+                    email=email,
+                    password=password,
+                    role=User.Role.ANALYST  # Default role
+                )
+                
+                messages.success(request, 'Account created successfully! Please sign in.')
+                return redirect('authentication:login')
+            except Exception as e:
+                messages.error(request, f'Registration failed: {str(e)}')
+                
+        return render(request, 'authentication/register.html')
+
+    @staticmethod
     @login_required
     def logout_view(request):
         """Handle user logout - Complete view logic"""
