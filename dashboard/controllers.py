@@ -305,11 +305,29 @@ class DashboardController:
                 ))
 
         # Add template-specific data
+        
+        # Prepare chart data from real temperature readings
+        chart_labels = []
+        chart_temperatures = []
+        for reading in reversed(latest_temperature[:6]):  # Last 6 readings for chart
+            chart_labels.append(reading.timestamp.strftime('%H:%M'))
+            chart_temperatures.append(reading.temperature)
+        
+        # If not enough data, pad with defaults
+        while len(chart_labels) < 6:
+            chart_labels.insert(0, '--:--')
+            chart_temperatures.insert(0, 0)
+        
+        import json
+        
         data.update({
             # Map core_stats to stats for template compatibility
             'stats': data['core_stats'],
             'data_sources': data_sources,
             'latest_temperature': latest_temperature[:5],  # Show top 5
+            # Chart data for JavaScript
+            'chart_labels': json.dumps(chart_labels),
+            'chart_temperatures': json.dumps(chart_temperatures),
             # Keep all other data
             'env_metrics': data['env_metrics'],
             'quality_metrics': data['quality_metrics'],

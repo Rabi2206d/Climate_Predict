@@ -64,6 +64,10 @@ python manage.py migrate
 python manage.py createsuperuser
 ```
 
+> **Note**: A test admin user has been created for you:
+> - **Username**: `testadmin`
+> - **Password**: `testpassword123`
+
 4. **Run development server:**
 ```bash
 python manage.py runserver
